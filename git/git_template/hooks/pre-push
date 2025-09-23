@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# List of protected branches separated by spaces. Can be overridden via env var GIT_PROTECTED_BRANCHES
+protected_branches=${GIT_PROTECTED_BRANCHES:-"master main production release"}
+current_branch=$(git branch --show-current)
+
+# Check if current_branch is in the protected list (space-delimited match)
+case " $protected_branches " in
+  *" $current_branch "*)
+    printf "%s\n" "WARNING!!! You're about to push a protected branch '${current_branch}'"
+
+    # Prompt the user on TTY in a POSIX-compatible way
+    printf "%s" "Is that what you intended? [y|n] " > /dev/tty
+    # Read a full line (no -n/-p in POSIX); from TTY to avoid interference with git's stdin
+    if IFS= read -r REPLY < /dev/tty; then
+      :
+    else
+      # If we cannot read from TTY, be safe and block the push
+      exit 1
+    fi
+
+    # Normalize to lowercase and check for yes
+    ans=$(printf "%s" "$REPLY" | tr '[:upper:]' '[:lower:]')
+    case "$ans" in
+      y|ye|yes)
+        exit 0 ;; # push will execute
+      *)
+        exit 1 ;; # push will not execute
+    esac
+    ;;
+  *)
+    exit 0 ;; # push will execute
+esac

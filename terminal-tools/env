@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+eval "$(starship init bash)"
+
+. "$HOME/.atuin/bin/env"
+[[ -f "$HOME/.bash-preexec.sh" ]] && . "$HOME/.bash-preexec.sh"
+eval "$(atuin init bash)"
+
+export CARAPACE_BRIDGES="zsh,fish,bash,inshellisense"
+# shellcheck disable=SC1090
+. <(carapace _carapace)
+
+eval "$(direnv hook bash)"
+
+eval "$(fzf --bash)"
+
+#PATH="$(brew --prefix uutils-coreutils)/libexec/uubin:$PATH"
+#export PATH
+
+eval "$(zoxide init bash)"
