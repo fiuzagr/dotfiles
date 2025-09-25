@@ -2,7 +2,7 @@
 
 echo 'Starship prompt' >&3
 brew install starship
-ln -sf "$DOTFILES_PATH/terminal-tools/starship.toml" "$HOME/.config/starship.toml"
+create_symlink "$DOTFILES_PATH/terminal-tools/starship.toml" "$HOME/.config/starship.toml"
 
 echo 'Atuin shell history' >&3
 brew install atuin
@@ -15,7 +15,7 @@ brew install direnv
 
 echo 'eza as a ls alternative' >&3
 brew install eza
-ln -sf "$(which eza)" ~/.local/bin/ls
+create_symlink "$(which eza)" "$HOME/.local/bin/ls"
 
 echo 'fd as a find alternative' >&3
 brew install fd
@@ -25,7 +25,7 @@ brew install ripgrep
 
 echo 'bat as a cat alternative' >&3
 brew install bat
-ln -sf "$(which bat)" ~/.local/bin/cat
+create_symlink "$(which bat)" "$HOME/.local/bin/cat"
 
 echo 'fzf a fuzzy finder' >&3
 brew install fzf
@@ -40,7 +40,7 @@ brew install tealdeer
 
 echo 'zoxide as a cd alternative' >&3
 brew install zoxide
-ln -sf "$(which zoxide)" ~/.local/bin/cd
+create_symlink "$(which zoxide)" "$HOME/.local/bin/cd"
 
 echo 'yq to process yaml, json, xml, csv' >&3
 brew install yq
@@ -51,6 +51,4 @@ brew install fastfetch
 echo 'bbrew a TUI for Brew' >&3
 brew install Valkyrie00/homebrew-bbrew/bbrew
 
-ln -sf "$DOTFILES_PATH/terminal-tools/env" "$HOME/.bash_dotfiles"
-
-to_bashrc '. "$HOME/.bash_dotfiles"'
+to_bashrc '. "$DOTFILES_PATH/terminal-tools/env"'

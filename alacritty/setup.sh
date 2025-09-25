@@ -10,4 +10,4 @@ if command -v update-alternatives >/dev/null 2>&1; then
 fi
 
 mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/alacritty"
-ln -sf "$DOTFILES_PATH/alacritty/alacritty.toml" "${XDG_CONFIG_HOME:-$HOME/.config}/alacritty/alacritty.toml"
+create_symlink "$DOTFILES_PATH/alacritty/alacritty.toml" "${XDG_CONFIG_HOME:-$HOME/.config}/alacritty/alacritty.toml"

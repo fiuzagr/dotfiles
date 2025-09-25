@@ -36,9 +36,11 @@ echo "--------------------------------" >&3
 echo 'Running Setup...' >&3
 echo "--------------------------------" >&3
 
+to_bashrc "export DOTFILES_PATH=\"$DOTFILES_PATH\""
+
 if [ $# -eq 0 ]; then
   # the order here matters!
-  modules="base local fonts ssh gpg cargo flatpak homebrew git vim terminal-tools alacritty opencode devtoolbox"
+  modules="base local fonts ssh gpg cargo flatpak homebrew git vim terminal-tools node alacritty opencode devtoolbox"
 
   echo 'Performing FULL setup...' >&3
   echo "modules: $modules" >&3
@@ -52,9 +54,6 @@ if [ $# -eq 0 ]; then
     . "$DOTFILES_PATH/$module/setup.sh"
   done
   IFS=$save_IFS
-
-  # add local bin to path as a last step
-  to_bashrc 'export PATH=$HOME/.local/bin:$PATH'
 else
   echo "Performing '$1' module setup..." >&3
 
@@ -63,8 +62,7 @@ else
 fi
 
 # reload bashrc with all the new stuff
-# shellcheck disable=SC1090
-. ~/.bashrc
+. "$HOME/.bashrc"
 
 echo >&3
 echo "--------------------------------" >&3

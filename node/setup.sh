@@ -1,10 +1,11 @@
 #!/usr/bin/env sh
 
-mkdir -p ~/.nvm
+mkdir -p "$HOME/.nvm"
 
 brew install nvm
-nvm install --latest
 
-to_bashrc ". '$DOTFILES_PATH/node/env'"
+. "$DOTFILES_PATH/node/env"
+to_bashrc '. "$DOTFILES_PATH/node/env"'
 
+nvm install --lts
 

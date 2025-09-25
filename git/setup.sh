@@ -3,15 +3,12 @@
 brew install git
 brew install gh
 
-touch ~/.gitconfig
+touch "$HOME/.gitconfig"
 
-if ! grep -q "$DOTFILES_PATH" ~/.gitconfig 2>/dev/null; then
-  echo "[include]" >> ~/.gitconfig
-  echo "  path = $DOTFILES_PATH/git/gitconfig" >> ~/.gitconfig
-  echo "[core]" >> ~/.gitconfig
-  echo "  excludesfile = $DOTFILES_PATH/git/gitignore" >> ~/.gitconfig
-  echo "[init]" >> ~/.gitconfig
-  echo "  templatedir = $DOTFILES_PATH/git/git_template" >> ~/.gitconfig
+if ! git config --global --get-all include.path | grep -q "$DOTFILES_PATH" 2>/dev/null; then
+  git config --global include.path "$DOTFILES_PATH/git/gitconfig"
+  git config --global core.excludesfile "$DOTFILES_PATH/git/gitignore"
+  git config --global init.templatedir "$DOTFILES_PATH/git/git_template"
 fi
 
 if ! git config --global user.name > /dev/null 2>&1 || ! git config --global user.email > /dev/null 2>&1; then

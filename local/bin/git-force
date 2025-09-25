@@ -2,7 +2,7 @@
 
 set -e
 
-LOG_FILE=~/.local/var/logs/git-force.log
+LOG_FILE="$HOME/.local/var/logs/git-force.log"
 
 exec 3>&1 4>&2
 trap 'exec 2>&4 1>&3' 0 1 2 3 15

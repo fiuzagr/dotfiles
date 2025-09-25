@@ -3,6 +3,8 @@
 sudo apt update -y
 sudo apt install -y dpkg \
     build-essential \
+    make \
+    perl \
     gcc \
     curl \
     file \
@@ -17,5 +19,6 @@ sudo apt install -y dpkg \
     libfontconfig1-dev \
     libxcb-xfixes0-dev \
     libxkbcommon-dev \
-    python3
+    python3 \
+    stow
 
