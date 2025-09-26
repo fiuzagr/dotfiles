@@ -53,6 +53,7 @@ sh ~/.dotfiles/setup.sh <module>
 
 - [Dev Toolbox](https://flathub.org/en/apps/me.iepure.devtoolbox)
 - [opencode](https://opencode.ai/)
+- Podman from Homebrew as a Docker replacement
 - Vim from Homebrew
 - Git from Homebrew
 - ...

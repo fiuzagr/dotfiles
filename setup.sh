@@ -40,7 +40,7 @@ to_bashrc "export DOTFILES_PATH=\"$DOTFILES_PATH\""
 
 if [ $# -eq 0 ]; then
   # the order here matters!
-  modules="base local fonts ssh gpg cargo flatpak homebrew git vim terminal-tools node alacritty opencode devtoolbox"
+  modules="base local fonts ssh gpg cargo flatpak homebrew git vim terminal-tools podman node alacritty opencode devtoolbox"
 
   echo 'Performing FULL setup...' >&3
   echo "modules: $modules" >&3

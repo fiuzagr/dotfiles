@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 
-flatpak install -y com.jetbrains.WebStorm
+flatpak install -y --user com.jetbrains.WebStorm
 

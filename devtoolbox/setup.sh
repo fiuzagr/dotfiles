@@ -1,3 +1,3 @@
 #!/usr/bin/env sh
 
-flatpak install -y flathub me.iepure.devtoolbox
+flatpak install -y --user flathub me.iepure.devtoolbox
