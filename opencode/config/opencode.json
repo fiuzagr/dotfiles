@@ -17,6 +17,14 @@
         "--api-key",
         "$CONTEXT7_API_KEY"
       ]
+    },
+    "figma": {
+      "type": "remote",
+      "url": "https://mcp.figma.com/mcp",
+      "enabled": true,
+      "headers": {
+        "Authorization": "Bearer $FIGMA_API_KEY"
+      }
     }
   }
 }

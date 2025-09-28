@@ -4,6 +4,8 @@ set -ae
 
 DOTFILES_PATH="$(cd -P -- "$(dirname -- "${0}")" && printf '%s\n' "$(pwd -P)")"
 export DOTFILES_PATH
+DOTFILESRC_PATH="$HOME/.dotfilesrc"
+export DOTFILESRC_PATH
 
 LOG_FILE="$DOTFILES_PATH/setup.log"
 LOG_MAX_SIZE=$((3*1024*1024))  # 3MB in bytes
@@ -34,39 +36,56 @@ echo "--------------------------------"
 echo >&3
 echo "--------------------------------" >&3
 echo 'Running Setup...' >&3
+echo "Log file: $LOG_FILE" >&3
 echo "--------------------------------" >&3
 
-to_bashrc "export DOTFILES_PATH=\"$DOTFILES_PATH\""
-
 if [ $# -eq 0 ]; then
-  # the order here matters!
-  modules="base local fonts ssh gpg cargo flatpak homebrew git vim terminal-tools podman node alacritty opencode devtoolbox"
+  # (re)create .dotfilesrc in full setup
+  echo "#!/usr/bin/env bash" > "$HOME/.dotfilesrc"
+  to_dotfilesrc "export DOTFILES_PATH=\"$DOTFILES_PATH\""
+  to_dotfilesrc "export DOTFILESRC_PATH=\"$DOTFILESRC_PATH\""
+  to_dotfilesrc "alias dotfiles='sh \$DOTFILES_PATH/setup.sh'"
 
+  # the order here matters!
+  modules="base local fonts ssh gpg cargo flatpak homebrew git vim terminal-tools podman node uv alacritty devtoolbox"
+
+  echo >&3
+  echo "--------------------------------" >&3
   echo 'Performing FULL setup...' >&3
   echo "modules: $modules" >&3
   echo >&3
-
-  save_IFS=$IFS
-  IFS=' '
-  for module in $modules; do
-    echo "Performing '$module' module setup..." >&3
-    # shellcheck disable=SC1090
-    . "$DOTFILES_PATH/$module/setup.sh"
-  done
-  IFS=$save_IFS
 else
-  echo "Performing '$1' module setup..." >&3
+  if [ ! -f "$DOTFILESRC_PATH" ]; then
+    echo "Error: Please run full setup first (without parameters)" >&3
+    exit 1
+  fi
 
-  # shellcheck disable=SC1090
-  . "$DOTFILES_PATH/$1/setup.sh"
+  modules="$*"
 fi
 
-# reload bashrc with all the new stuff
-. "$HOME/.bashrc"
+save_IFS=$IFS
+IFS=' '
+for module in $modules; do
+  echo >&3
+  echo "--------------------------------" >&3
+  echo "Performing '$module' module setup..." >&3
+
+  if [ ! -f "$DOTFILES_PATH/$module/setup.sh" ]; then
+    echo "Error: Module '$module' does not exist." >&3
+    exit 1
+  fi
+
+  # shellcheck disable=SC1090
+  . "$DOTFILES_PATH/$module/setup.sh"
+done
+IFS=$save_IFS
+
+to_bashrc ". \"$DOTFILESRC_PATH\""
 
 echo >&3
 echo "--------------------------------" >&3
 echo 'Setup done!' >&3
+echo "Reopen your terminal" >&3
 echo "--------------------------------" >&3
 
 exit 0

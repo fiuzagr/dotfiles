@@ -8,24 +8,40 @@
 #   to_file '~/.bashrc' 'export PATH=$HOME/.local/bin:$PATH'
 #   to_file '~/.bashrc' '\\.my_custom_script' 'source $HOME/.my_custom_script'
 to_file() {
-  if [ ! -f "$1" ]; then
+  tf_file=$1
+  tf_test_or_line=$2
+  tf_line_if_test=$3
+
+  if [ ! -f "$tf_file" ]; then
     echo "Error: First parameter should be a file" >&2
     exit 1
   fi
-  if [ -z "$2" ]; then
+  if [ -z "$tf_test_or_line" ]; then
     echo "Error: Second parameter cannot be empty" >&2
     exit 1
   fi
 
-  if ! grep -q "$2" "$1"; then
-    echo '' >> "$1"
-    if [ -n "$3" ]; then
-      echo "$3" >> "$1"
+  if ! grep -q "$tf_test_or_line" "$tf_file"; then
+    echo '' >> "$tf_file"
+    if [ -n "$tf_line_if_test" ]; then
+      echo "$tf_line_if_test" >> "$tf_file"
     else
-      echo "$2" >> "$1"
+      echo "$tf_test_or_line" >> "$tf_file"
     fi
   fi
 
+  return
+}
+
+# Append a line to ~/.dotfilesrc if it doesn't already exist
+# $1 - regex test OR line to append
+# $2 - line to append (if $1 is regex test)
+# Usages:
+#   to_dotfilesrc 'export PATH=$HOME/.local/bin:$PATH'
+#   to_dotfilesrc '\\.my_custom_script' 'source $HOME/.my_custom_script'
+to_dotfilesrc() {
+  touch "$HOME/.dotfilesrc"
+  to_file "$HOME/.dotfilesrc" "$1" "$2"
   return
 }
 

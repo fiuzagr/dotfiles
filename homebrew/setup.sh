@@ -4,4 +4,4 @@ NONINTERACTIVE=1 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebre
 
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-to_bashrc '. "$DOTFILES_PATH/homebrew/env"'
+to_dotfilesrc '. "$DOTFILES_PATH/homebrew/env"'

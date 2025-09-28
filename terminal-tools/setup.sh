@@ -51,4 +51,4 @@ brew install fastfetch
 echo 'bbrew a TUI for Brew' >&3
 brew install Valkyrie00/homebrew-bbrew/bbrew
 
-to_bashrc '. "$DOTFILES_PATH/terminal-tools/env"'
+to_dotfilesrc '. "$DOTFILES_PATH/terminal-tools/env"'

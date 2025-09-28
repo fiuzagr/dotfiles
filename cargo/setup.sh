@@ -5,7 +5,7 @@ if ! command -v cargo >/dev/null 2>&1; then
   . "$HOME/.cargo/env"
 fi
 
-to_bashrc '. "$DOTFILES_PATH/cargo/env"'
+to_dotfilesrc '. "$DOTFILES_PATH/cargo/env"'
 
 rustup update stable
 rustup default stable
