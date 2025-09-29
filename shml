@@ -1,0 +1,696 @@
+#!/usr/bin/env sh
+
+#SHML:START
+#************************************************#
+#    SHML - Shell Markup Language Framework
+#                   v1.1.0
+#                    (MIT)
+#        by Justin Dorfman - @jdorfman
+#        && Joshua Mervine - @mervinej
+#
+#               http://shml.xyz
+#************************************************#
+SHML_VERSION="1.1.0"
+
+# Progress Bar
+##
+# options:
+# SHML_PROGRESS_CHAR     - width of progress bar, default '#'
+# SHML_PROGRESS_WIDTH    - width of progress bar, default 60
+# SHML_PROGRESS_MAX      - maximum progress value, default 100
+# SHML_PROGRESS_BREAK    - put a new line at the end of the output, default 'true'
+# SHML_PROGRESS_CLEAR    - clear line at the end of the output, default 'false'
+# SHML_PGOGRESS_NOCURSOR - hide the cursor, default 'true'
+
+progress() {
+  [ -z "$SHML_PROGRESS_WIDTH" ]    && SHML_PROGRESS_WIDTH=60
+  [ -z "$SHML_PROGRESS_BREAK" ]    && SHML_PROGRESS_BREAK=true
+  [ -z "$SHML_PROGRESS_CLEAR" ]    && SHML_PROGRESS_CLEAR=false
+  [ -z "$SHML_PROGRESS_NOCURSOR" ] && SHML_PROGRESS_NOCURSOR=true
+  # defaults
+  progress_title="Progress"
+  progress_steps=10
+  progress_char="#"
+
+  # arg parser
+  [ -n "$1" ] && progress_title=$1
+  [ -n "$2" ] && progress_steps=$2
+  [ -n "$3" ] && progress_char="$3"
+
+  progress_width=${SHML_PROGRESS_WIDTH}
+  progress_break=${SHML_PROGRESS_BREAK}
+  progress_clear=${SHML_PROGRESS_CLEAR}
+  progress_ncursor=${SHML_PROGRESS_NOCURSOR}
+  progress_pct=0
+  progress_num=0
+  progress_len=0
+  progress_bar=''
+  progress_line=''
+
+  # ensure terminal
+  [ -t 1 ] || return 1
+
+  # ensure tput
+  if command -v tput >/dev/null 2>&1; then
+    if $progress_ncursor; then
+      # hide cursor
+      tput civis
+      trap 'tput cnorm; exit 1' INT
+    fi
+  fi
+
+  while read -r progress_value; do
+    # compute pct
+    progress_pct=$(( progress_value * 100 / progress_steps ))
+
+    # compute number of blocks to display
+    progress_num=$(( progress_value * progress_width / progress_steps ))
+
+    # create bar string
+    if [ $progress_num -gt 0 ]; then
+      progress_bar=""
+      progress_i=1
+      while [ $progress_i -le $progress_num ]; do
+        progress_bar="${progress_bar}${progress_char}"
+        progress_i=$((progress_i + 1))
+      done
+    fi
+
+    progress_line=$(printf "%s [%-${progress_width}s] (%d%%)" "$progress_title" "$progress_bar" "$progress_pct")
+
+    # print bar
+    printf "%s\r" "$progress_line"
+  done
+
+  # clear line if requested
+  if $progress_clear; then
+    progress_len=$(printf "%s" "$progress_line" | wc -c)
+    printf "%$((progress_len + 1))s\r" " "
+  fi
+
+  # new line if requested
+  $progress_break && echo
+
+  # show cursor again
+  command -v tput >/dev/null 2>&1 && $progress_ncursor && tput cnorm
+}
+
+# Confirm / Dialog
+##
+__default_confirm_success_input="y Y yes Yes YES ok OK Ok okay Okay OKAY k K continue Continue CONTINUE proceed Proceed PROCEED success Success SUCCESS successful Successful SUCCESSFUL good Good GOOD"
+confirm() {
+  [ -z "$1" ] && return 127
+
+  [ -z "$SHML_CONFIRM_SUCCESS" ] && SHML_CONFIRM_SUCCESS=$__default_confirm_success_input
+
+  printf "%s " "$1"
+  confirm_found=false
+  while read -r confirm_input; do
+    for str in $(echo $SHML_CONFIRM_SUCCESS); do
+      [ "$str" = "$confirm_input" ] && confirm_found=true
+    done
+    break
+  done
+
+  if $confirm_found; then
+    [ -n "$2" ] && eval "$2"
+    return 0
+  else
+    [ -n "$3" ] && eval "$3"
+    return 1
+  fi
+}
+
+dialog() {
+  [ -z "$1" ] && return 127
+  [ -z "$2" ] && return 127
+
+  printf "%s " "$1"
+  while read -r dialog_input; do
+    eval "$2 $dialog_input"
+    break
+  done
+}
+
+# Foreground (Text)
+##
+fgcolor() {
+  fgcolor_end='\033[39m'
+  fgcolor_color=$fgcolor_end # end by default
+  case "$1" in
+    end|off|reset)       fgcolor_color=$fgcolor_end;;
+    black|000000|000)    fgcolor_color='\033[30m';;
+    red|F00BAF)          fgcolor_color='\033[31m';;
+    green|00CD00)        fgcolor_color='\033[32m';;
+    yellow|CDCD00)       fgcolor_color='\033[33m';;
+    blue|0286fe)         fgcolor_color='\033[34m';;
+    magenta|e100cc)      fgcolor_color='\033[35m';;
+    cyan|00d3cf)         fgcolor_color='\033[36m';;
+    gray|e4e4e4)         fgcolor_color='\033[90m';;
+    darkgray|4c4c4c)     fgcolor_color='\033[91m';;
+    lightgreen|00fe00)   fgcolor_color='\033[92m';;
+    lightyellow|f8fe00)  fgcolor_color='\033[93m';;
+    lightblue|3a80b5)    fgcolor_color='\033[94m';;
+    lightmagenta|fe00fe) fgcolor_color='\033[95m';;
+    lightcyan|00fefe)    fgcolor_color='\033[96m';;
+    white|ffffff|fff)    fgcolor_color='\033[97m';;
+  esac
+  if test "$2"; then
+    printf "%s" "$fgcolor_color$2$fgcolor_end"
+  else
+    printf "%s" "$fgcolor_color"
+  fi
+}
+
+# Backwards Compatibility
+color() {
+  fgcolor "$@"
+}
+
+# Aliases
+fgc() {
+  fgcolor "$@"
+}
+
+c() {
+  fgcolor "$@"
+}
+
+# Background
+##
+bgcolor() {
+  bgcolor_end='\033[49m'
+  bgcolor_color=$bgcolor_end # end by default
+  case "$1" in
+    end|off|reset)       bgcolor_color=$bgcolor_end;;
+    black|000000|000)    bgcolor_color='\033[40m';;
+    red|F00BAF)          bgcolor_color='\033[41m';;
+    green|00CD00)        bgcolor_color='\033[42m';;
+    yellow|CDCD00)       bgcolor_color='\033[43m';;
+    blue|0286fe)         bgcolor_color='\033[44m';;
+    magenta|e100cc)      bgcolor_color='\033[45m';;
+    cyan|00d3cf)         bgcolor_color='\033[46m';;
+    gray|e4e4e4)         bgcolor_color='\033[47m';;
+    darkgray|4c4c4c)     bgcolor_color='\033[100m';;
+    lightred)            bgcolor_color='\033[101m';;
+    lightgreen|00fe00)   bgcolor_color='\033[102m';;
+    lightyellow|f8fe00)  bgcolor_color='\033[103m';;
+    lightblue|3a80b5)    bgcolor_color='\033[104m';;
+    lightmagenta|fe00fe) bgcolor_color='\033[105m';;
+    lightcyan|00fefe)    bgcolor_color='\033[106m';;
+    white|fffff|fff)     bgcolor_color='\033[107m';;
+  esac
+
+  if test "$2"; then
+    printf "%s" "$bgcolor_color$2$bgcolor_end"
+  else
+    printf "%s" "$bgcolor_color"
+  fi
+}
+
+#Backwards Compatibility
+background() {
+  bgcolor "$@"
+}
+
+#Aliases
+bgc() {
+  bgcolor "$@"
+}
+
+bg() {
+  bgcolor "$@"
+}
+
+## Color Bar
+color_bar() {
+  if test "$2"; then
+    for i in "$@"; do
+      printf "%s" "$(background "$i" " ")"
+    done; echo
+  else
+    # Default color bar pattern
+    for i in 16 17 18 19 20 21 20 19 18 17 16; do
+      printf "\033[48;5;%sm \033[0m" "$i"
+    done; echo
+  fi
+}
+
+#Alises
+cb() {
+  color_bar "$@"
+}
+
+bar() {
+  color_bar "$@"
+}
+
+## Attributes
+##
+attribute() {
+  attribute_end='\033[0m'
+  attribute_attr=$attribute_end # end by default
+  case "$1" in
+    end|off|reset) attribute_attr=$attribute_end;;
+    bold)          attribute_attr='\033[1m';;
+    dim)           attribute_attr='\033[2m';;
+    underline)     attribute_attr='\033[4m';;
+    blink)         attribute_attr='\033[5m';;
+    invert)        attribute_attr='\033[7m';;
+    hidden)        attribute_attr='\033[8m';;
+  esac
+  if test "$2"; then
+    printf "%s" "$attribute_attr$2$attribute_end"
+  else
+    printf "%s" "$attribute_attr"
+  fi
+}
+a() {
+  attribute "$@"
+}
+
+## Elements
+br() {
+  printf "\n\r"
+}
+
+tab() {
+  printf "\t"
+}
+
+indent() {
+  indent_len=4
+  if test "$1"; then
+    case "$1" in
+      ''|*[!0-9]*) ;; # not a number, use default
+      *) indent_len=$1 ;;  # is a number
+    esac
+  fi
+  while [ "$indent_len" -gt 0 ]; do
+    printf " "
+     indent_len=$(( indent_len - 1 ))
+  done
+}
+
+i() {
+  indent "$@"
+}
+
+hr() {
+  hr_len=60
+  hr_char='-'
+  if ! test "$2"; then
+    case "$1" in
+      ''|*[!0-9]*) # not a number or empty
+        test "$1" && hr_char=$1 ;;
+      *) # is a number
+        hr_len=$1 ;;
+    esac
+  else
+    hr_len=$2
+    hr_char=$1
+  fi
+  while [ "$hr_len" -gt 0 ]; do
+    printf "%s" "$hr_char"
+     hr_len=$(( hr_len - 1 ))
+  done
+}
+
+# Icons
+##
+icon() {
+  icon_i='';
+  case "$1" in
+    check|checkmark)       icon_i='\xE2\x9C\x93';;
+    X|x|xmark)             icon_i='\xE2\x9C\x98';;
+    '<3'|heart)            icon_i='\xE2\x9D\xA4';;
+    sun)                   icon_i='\xE2\x98\x80';;
+    '*'|star)              icon_i='\xE2\x98\x85';;
+    darkstar)              icon_i='\xE2\x98\x86';;
+    umbrella)              icon_i='\xE2\x98\x82';;
+    flag)                  icon_i='\xE2\x9A\x91';;
+    snow|snowflake)        icon_i='\xE2\x9D\x84';;
+    music)                 icon_i='\xE2\x99\xAB';;
+    scissors)              icon_i='\xE2\x9C\x82';;
+    tm|trademark)          icon_i='\xE2\x84\xA2';;
+    copyright)             icon_i='\xC2\xA9';;
+    apple)                 icon_i='\xEF\xA3\xBF';;
+    skull|bones)           icon_i='\xE2\x98\xA0';;
+    ':-)'|':)'|smile|face) icon_i='\xE2\x98\xBA';;
+  esac
+  printf "%s" "$icon_i"
+}
+
+# Emojis
+##
+emoji() {
+  emoji_i=""
+  case "$1" in
+    1F603|smiley|'=)'|':-)'|':)')       emoji_i='😃';;
+    1F607|innocent|halo)                emoji_i='😇';;
+    1F602|joy|lol|laughing)             emoji_i='😂';;
+    1F61B|tongue|'=p'|'=P')             emoji_i='😛';;
+    1F60A|blush|'^^'|blushing)          emoji_i='😊';;
+    1F61F|worried|sadface|sad)          emoji_i='😟';;
+    1F622|cry|crying|tear)              emoji_i='😢';;
+    1F621|rage|redface)                 emoji_i='😡';;
+    1F44B|wave|hello|goodbye)           emoji_i='👋';;
+    1F44C|ok_hand|perfect|okay|nice|ok) emoji_i='👌';;
+    1F44D|thumbsup|+1|like)             emoji_i='👍';;
+    1F44E|thumbsdown|-1|no|dislike)     emoji_i='👎';;
+    1F63A|smiley_cat|happycat)          emoji_i='😺';;
+    1F431|cat|kitten|:3|kitty)          emoji_i='🐱';;
+    1F436|dog|puppy)                    emoji_i='🐶';;
+    1F41D|bee|honeybee|bumblebee)       emoji_i='🐝';;
+    1F437|pig|pighead)                  emoji_i='🐷';;
+    1F435|monkey_face|monkey)           emoji_i='🐵';;
+    1F42E|cow|happycow)                 emoji_i='🐮';;
+    1F43C|panda_face|panda|shpanda)     emoji_i='🐼';;
+    1F363|sushi|raw|sashimi)            emoji_i='🍣';;
+    1F3E0|home|house)                   emoji_i='🏠';;
+    1F453|eyeglasses|bifocals)          emoji_i='👓';;
+    1F6AC|smoking|smoke|cigarette)      emoji_i='🚬';;
+    1F525|fire|flame|hot|snapstreak)    emoji_i='🔥';;
+    1F4A9|hankey|poop|poo|shit)         emoji_i='💩';;
+    1F37A|beer|homebrew|brew)           emoji_i='🍺';;
+    1F36A|cookie|biscuit|chocolate)     emoji_i='🍪';;
+    1F512|lock|padlock|secure)          emoji_i='🔒';;
+    1F513|unlock|openpadlock)           emoji_i='🔓';;
+    2B50|star|yellowstar)               emoji_i='⭐';;
+    1F0CF|black_joker|joker|wild)       emoji_i='🃏';;
+    2705|white_check_mark|check)        emoji_i='✅';;
+    274C|x|cross|xmark)                 emoji_i='❌';;
+    1F6BD|toilet|restroom|loo)          emoji_i='🚽';;
+    1F514|bell|ringer|ring)             emoji_i='🔔';;
+    1F50E|mag_right|search|magnify)     emoji_i='🔎';;
+    1F3AF|dart|bullseye|darts)          emoji_i='🎯';;
+    1F4B5|dollar|cash|cream)            emoji_i='💵';;
+    1F4AD|thought_balloon|thinking)     emoji_i='💭';;
+    1F340|four_leaf_clover|luck)        emoji_i='🍀';;
+  esac
+  printf "%s" "$emoji_i"
+}
+
+e() {
+  emoji "$@"
+}
+
+#SHML:END
+
+
+# Usage / Examples
+##
+if [ "${0##*/}" = "shml" ]; then
+
+case "$*" in
+  *-v*)
+    echo "shml version ${SHML_VERSION}"
+    exit 0
+    ;;
+esac
+
+I=2
+echo "
+$(color "lightblue")
+#$(hr "*" 48)#
+#    SHML - Shell Markup Language Framework
+#                   v${SHML_VERSION}
+#                    (MIT)
+#        by Justin Dorfman - @jdorfman
+#        && Joshua Mervine - @mervinej
+#
+#        https://maxcdn.github.io/shml/
+#$(hr "*" 48)#
+$(color "end")
+
+$(a bold 'SHML Usage / Help')
+$(hr '=')
+
+$(a bold 'Section 0: Sourcing')
+$(hr '-')
+
+$(i $I)When installed in path:
+$(i $I)  source \$(which shml.sh)
+
+$(i $I)When installed locally:
+$(i $I)  source ./shml.sh
+
+$(a bold 'Section 1: Foreground')
+$(hr '-')
+
+$(i $I)\$(color red \"foo bar\")
+$(i $I)$(color red "foo bar")
+
+$(i $I)\$(color blue \"foo bar\")
+$(i $I)$(color blue "foo bar")
+
+$(i $I)\$(fgcolor green)
+$(i $I)  >>foo bar<<
+$(i $I)  >>bah boo<<
+$(i $I)\$(fgcolor end)
+$(i $I)$(fgcolor green)
+$(i $I)>>foo bar<<
+$(i $I)>>bah boo<<
+$(i $I)$(fgcolor end)
+
+$(i $I)Short Hand: $(a underline 'c')
+
+$(i $I)\$(c red 'foo')
+
+$(i $I)Argument list:
+
+$(i $I)black, red, green, yellow, blue, magenta, cyan, gray,
+$(i $I)white, darkgray, lightgreen, lightyellow, lightblue,
+$(i $I)lightmagenta, lightcyan
+
+$(i $I)Termination: end, off, reset
+
+$(i $I)Default (no arg): end
+
+
+$(a bold 'Section 2: Background')
+$(hr '-')
+
+$(i $I)\$(bgcolor red \"foo bar\")
+$(i $I)$(background red "foo bar")
+
+$(i $I)\$(background blue \"foo bar\")
+$(i $I)$(background blue "foo bar")
+
+$(i $I)\$(background green)
+$(i $I)$(i $I)>>foo bar<<
+$(i $I)$(i $I)>>bah boo<<
+$(i $I)\$(background end)
+$(background green)
+$(i $I)>>foo bar<<
+$(i $I)>>bah boo<<
+$(background end)
+
+$(i $I)Short Hand: $(a underline 'bg')
+
+$(i $I)\$(bg red 'foo')
+
+$(i $I)Argument list:
+
+$(i $I)black, red, green, yellow, blue, magenta, cyan, gray,
+$(i $I)white, darkgray, lightred, lightgreen, lightyellow,
+$(i $I)lightblue, lightmagenta, lightcyan
+
+$(i $I)Termination: end, off, reset
+
+$(i $I)Default (no arg): end
+
+
+$(a bold 'Section 3: Attributes')
+$(hr '-')
+
+$(i $I)$(a bold "Attributes only work on vt100 compatible terminals.")
+
+$(i $I)> Note:
+$(i $I)> $(a underline 'attribute end') turns off everything,
+$(i $I)> including foreground and background color.
+
+$(i $I)\$(attribute bold \"foo bar\")
+$(i $I)$(attribute bold "foo bar")
+
+$(i $I)\$(attribute underline \"foo bar\")
+$(i $I)$(attribute underline "foo bar")
+
+$(i $I)\$(attribute blink \"foo bar\")
+$(i $I)$(attribute blink "foo bar")
+
+$(i $I)\$(attribute invert \"foo bar\")
+$(i $I)$(attribute invert "foo bar")
+
+$(i $I)\$(attribute dim)
+$(i $I)$(i $I)>>foo bar<<
+$(i $I)$(i $I)>>bah boo<<
+$(i $I)\$(attribute end)
+$(i $I)$(attribute dim)
+$(i $I)$(i $I)>>foo bar<<
+$(i $I)$(i $I)>>bah boo<<
+$(i $I)$(attribute end)
+
+$(i $I)Short Hand: $(a underline 'a')
+
+$(i $I)\$(a bold 'foo')
+
+$(i $I)Argument list:
+
+$(i $I)bold, dim, underline, blink, invert, hidden
+
+$(i $I)Termination: end, off, reset
+
+$(i $I)Default (no arg): end
+
+
+$(a bold 'Section 4: Elements')
+$(hr '-')
+
+$(i $I)foo\$(br)\$(tab)bar
+$(i $I)foo$(br)$(tab)bar
+$(i $I)
+$(i $I)foo\$(br)\$(indent)bar\$(br)\$(indent 6)boo
+$(i $I)foo$(br)$(indent)bar$(br)$(indent 6)boo
+$(i $I)
+$(i $I)> Note: short hand for $(a underline 'indent') is $(a underline 'i')
+$(i $I)
+$(i $I)\$(hr)
+$(i $I)$(hr)
+$(i $I)
+$(i $I)\$(hr 50)
+$(i $I)$(hr 50)
+$(i $I)
+$(i $I)\$(hr '~' 40)
+$(i $I)$(hr '~' 40)
+$(i $I)
+$(i $I)\$(hr '#' 30)
+$(i $I)$(hr '#' 30)
+
+
+$(a bold 'Section 5: Icons')
+$(hr '-')
+
+$(i $I)Icons
+$(i $I)$(hr '-' 10)
+
+$(i $I)\$(icon check) \$(icon '<3') \$(icon '*') \$(icon ':)')
+
+$(i $I)$(icon check) $(icon '<3') $(icon '*') $(icon 'smile')
+
+$(i $I)Argument list:
+
+$(i $I)check|checkmark, X|x|xmark, <3|heart, sun, *|star,
+$(i $I)darkstar, umbrella, flag, snow|snowflake, music,
+$(i $I)scissors, tm|trademark, copyright, apple,
+$(i $I):-)|:)|smile|face
+
+
+$(a bold 'Section 6: Emojis')
+$(hr '-')
+
+$(i $I)Couldn't peep it with a pair of \$(emoji bifocals)
+$(i $I)Couldn't peep it with a pair of $(emoji bifocals)
+$(i $I)
+$(i $I)I'm no \$(emoji joker) play me as a \$(emoji joker)
+$(i $I)I'm no $(emoji joker) play me as a $(emoji joker)
+$(i $I)
+$(i $I)\$(emoji bee) on you like a \$(emoji house) on \$(emoji fire), \$(emoji smoke) ya
+$(i $I)$(emoji bee) on you like a $(emoji house) on $(emoji fire), $(emoji smoke) ya
+$(i $I)
+$(i $I)$(a bold 'Each Emoji has 1 or more alias')
+$(i $I)
+$(i $I)\$(emoji smiley) \$(emoji 1F603) \$(emoji '=)') \$(emoji ':-)') \$(emoji ':)')
+$(i $I)$(emoji smiley) $(emoji 1F603) $(emoji '=)') $(emoji ':-)') $(emoji ':)')
+
+$(a bold 'Section 7: Color Bar')
+$(hr '-')
+
+$(i $I)\$(color_bar)
+$(i $I)$(color_bar)
+$(i $I)
+$(i $I)\$(color_bar red green yellow blue magenta \\
+$(i $I)$(i 15)cyan lightgray darkgray lightred \\
+$(i $I)$(i 15)lightgreen lightyellow lightblue \\
+$(i $I)$(i 15)lightmagenta lightcyan)
+$(i $I)$(color_bar red green yellow blue magenta \
+                  cyan lightgray darkgray lightred \
+                  lightgreen lightyellow lightblue \
+                  lightmagenta lightcyan)
+
+$(i $I)Short Hand: $(a underline 'bar')
+$(i $I)
+$(i $I)\$(bar black yellow black yellow black yellow)
+$(i $I)$(bar black yellow black yellow black yellow)
+
+$(a bold "Section 8: $(color red "[EXPERIMENTAL]") Progress Bar")
+$(hr '-')
+
+$(i $I)Usage: progress [TITLE] [STEPS] [CHAR]
+
+$(i $I) - 'title' defines the progress bar title
+$(i $I) - 'steps' defines the number of steps for the progress bar to act upon
+$(i $I) - 'char' defines the character to be displayed in the progress bar
+
+$(i $I)Example:
+
+$(i $I)echo "\$\(color green\)"
+$(i $I)for i in \$(seq 0 10); do echo \$i; sleep .25; done | progress
+$(i $I)echo "\$\(color end\)"
+
+$(color green "$(i $I)Example  [####################                    ] (50%)")
+
+$(i $I)'progress' supports overriding default values by setting the following variables:
+
+$(i $I) - SHML_PROGRESS_WIDTH    - width of progress bar, default 60
+$(i $I) - SHML_PROGRESS_BREAK    - put a new line at the end of the output, default 'true'
+$(i $I) - SHML_PROGRESS_CLEAR    - clear line at the end of the output, default 'false'
+$(i $I) - SHML_PGOGRESS_NOCURSOR - hide the cursor, default 'true'
+
+$(i $I)NOTE: These variables $(a bold 'must') be defined before sourcing 'shml'!
+
+$(a bold "Section 9: $(color red "[EXPERIMENTAL]") Confirm")
+$(hr '-')
+
+$(i $I)Ask a yes or no question and handle results.
+
+$(i $I)Usage: confirm QUESTION [SUCCESS_FUNCTION] [FAILURE_FUNCTION]
+
+$(i $I)Supports the following as affirmitive responses by default:
+
+$(for r in $(echo "$__default_confirm_success_input"); do echo "$(i $I) - '$r'"; done)
+
+$(i $I)Default affirmtive responses can be overwritten by setting 'SHML_CONFIRM_SUCCESS'.
+
+$(i $I)Example:
+
+$(i $I)function on_success() {
+$(i $I)    echo \"yay\"
+$(i $I)}
+
+$(i $I)function on_failure() {
+$(i $I)    echo \"boo\"
+$(i $I)}
+
+$(i $I)confirm \"CREAM?\" \"on_success\" \"on_failure\"
+
+
+$(a bold "Section 9: $(color red "[EXPERIMENTAL]") Dialog")
+$(hr '-')
+
+$(i $I)Asks a question and passes the answer to a response handler function.
+
+$(i $I)Usage: dialog QUESTION [RESPONSE_FUNCTION]
+
+$(i $I)Example:
+
+$(i $I)function on_response() {
+$(i $I)    echo \"hello $1\"
+$(i $I)}
+
+$(i $I)dialog \"What is your name?\" \"on_response\"
+
+" | less -r
+fi
+
+# vim: ft=sh:

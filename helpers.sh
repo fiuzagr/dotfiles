@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+. "$DOTFILES_PATH/shml"
+
 # Append a line to .bashrc if it doesn't already exist
 # $1 - file to test and append
 # $2 - regex test OR line to append

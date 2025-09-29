@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+# shellcheck disable=SC2005 # useless echo?
 
 set -ae
 
@@ -27,17 +28,17 @@ exec 1>>"$LOG_FILE" 2>&1
 
 . "$DOTFILES_PATH/helpers.sh"
 
-echo "--------------------------------"
+echo "$(hr)"
 echo "Setup started at: $(date)"
 echo "User: $(whoami)"
 echo "System: $(uname -a)"
-echo "--------------------------------"
+echo "$(hr)"
 
 echo >&3
-echo "--------------------------------" >&3
-echo 'Running Setup...' >&3
+echo "$(hr)" >&3
+echo "$(a bold 'Running Setup...')" >&3
 echo "Log file: $LOG_FILE" >&3
-echo "--------------------------------" >&3
+echo "$(hr)" >&3
 
 if [ $# -eq 0 ]; then
   # (re)create .dotfilesrc in full setup
@@ -50,7 +51,7 @@ if [ $# -eq 0 ]; then
   modules="base local fonts ssh gpg cargo flatpak homebrew git vim terminal-tools podman node uv alacritty devtoolbox"
 
   echo >&3
-  echo "--------------------------------" >&3
+  echo "$(hr)" >&3
   echo 'Performing FULL setup...' >&3
   echo "modules: $modules" >&3
   echo >&3
@@ -67,7 +68,7 @@ save_IFS=$IFS
 IFS=' '
 for module in $modules; do
   echo >&3
-  echo "--------------------------------" >&3
+  echo "$(hr)" >&3
   echo "Performing '$module' module setup..." >&3
 
   if [ ! -f "$DOTFILES_PATH/$module/setup.sh" ]; then
@@ -83,9 +84,9 @@ IFS=$save_IFS
 to_bashrc ". \"$DOTFILESRC_PATH\""
 
 echo >&3
-echo "--------------------------------" >&3
-echo 'Setup done!' >&3
+echo "$(hr)" >&3
+echo "$(fgc green)$(e check) Setup done!$(fgc end)" >&3
 echo "Reopen your terminal" >&3
-echo "--------------------------------" >&3
+echo "$(hr)" >&3
 
 exit 0
