@@ -25,7 +25,8 @@ modular setup scripts and shell utilities for system configuration.
 - **Functions**: Prefix variables with function name (e.g., `tf_file` in
   `to_file()`)
 - **Error handling**: Use `>&2` for errors and `exit 1` for failures
-- **Output**: Use `>&3` for user-facing messages in setup scripts
+- **Output**: Use `log` helper function for user-facing messages in setup
+  scripts
 - **Comments**: Document function parameters and usage examples
 
 ## File Structure

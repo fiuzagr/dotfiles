@@ -1,17 +1,17 @@
 #!/usr/bin/env sh
 
 if gpg --list-secret-keys | grep -q "sec"; then
-  echo 'GPG key already generated. Skipping...' >&3
+  log 'GPG key already generated. Skipping...'
 else
   sudo apt install -y gpg
-  echo 'Generating a new GPG key...' >&3
-  echo >&3
+  log 'Generating a new GPG key...'
+  log
 
-  echo "Enter your name for the GPG key:" >&3
+  log "Enter your name for the GPG key:"
   read -r NAME
-  echo "Enter your email for the GPG key:" >&3
+  log "Enter your email for the GPG key:"
   read -r EMAIL
-  echo >&3
+  log
 
   gpg --batch --generate-key <<EOF
 %echo Generating a GPG key

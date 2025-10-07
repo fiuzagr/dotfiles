@@ -2,6 +2,11 @@
 
 . "$DOTFILES_PATH/shml"
 
+log() {
+  echo "$*" >&3
+  return
+}
+
 # Append a line to .bashrc if it doesn't already exist
 # $1 - file to test and append
 # $2 - regex test OR line to append
@@ -81,11 +86,11 @@ create_symlink() {
   if [ ! -L "$cs_dst" ] && [ -e "$cs_dst" ]; then
     BACKUP_PATH="${cs_dst}_backup_$(date +%Y%m%d_%H%M%S)"
     mv "$cs_dst" "$BACKUP_PATH" || { echo "Failed to create backup of '$cs_dst'" >&2; exit 1; }
-    echo "Existing file/directory '$cs_dst' backed up to '$BACKUP_PATH'" >&3
+    log "Existing file/directory '$cs_dst' backed up to '$BACKUP_PATH'"
   fi
 
   ln -sf "$cs_src" "$cs_dst" || { echo "Failed to create symbolic link from '$cs_src' to '$cs_dst'" >&2; exit 1; }
-  echo "Created symbolic link from '$cs_src' to '$cs_dst'" >&3
+  log "Created symbolic link from '$cs_src' to '$cs_dst'"
 
   return
 }

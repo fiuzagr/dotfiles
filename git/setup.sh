@@ -12,12 +12,12 @@ if ! git config --global --get-all include.path | grep -q "$DOTFILES_PATH" 2>/de
 fi
 
 if ! git config --global user.name > /dev/null 2>&1 || ! git config --global user.email > /dev/null 2>&1; then
-  echo >&3
-  echo "Enter your name for GIT:" >&3
+  log
+  log "Enter your name for GIT:"
   read -r NAME
-  echo "Enter your email for GIT:" >&3
+  log "Enter your email for GIT:"
   read -r EMAIL
-  echo >&3
+  log
 
   git config --global user.name "$NAME"
   git config --global user.email "$EMAIL"

@@ -1,54 +1,54 @@
 #!/usr/bin/env sh
 
-echo 'Starship prompt' >&3
+log 'Starship prompt'
 brew install starship
 create_symlink "$DOTFILES_PATH/terminal-tools/starship.toml" "$HOME/.config/starship.toml"
 
-echo 'Atuin shell history' >&3
+log 'Atuin shell history'
 brew install atuin
 
-echo 'Carapace shell completer' >&3
+log 'Carapace shell completer'
 brew install carapace
 
-echo 'Direnv to load env variables from .envrc files' >&3
+log 'Direnv to load env variables from .envrc files'
 brew install direnv
 
-echo 'eza as a ls alternative' >&3
+log 'eza as a ls alternative'
 brew install eza
 create_symlink "$(which eza)" "$HOME/.local/bin/ls"
 
-echo 'fd as a find alternative' >&3
+log 'fd as a find alternative'
 brew install fd
 
-echo 'ripgrep as a grep alternative' >&3
+log 'ripgrep as a grep alternative'
 brew install ripgrep
 
-echo 'bat as a cat alternative' >&3
+log 'bat as a cat alternative'
 brew install bat
 create_symlink "$(which bat)" "$HOME/.local/bin/cat"
 
-echo 'fzf a fuzzy finder' >&3
+log 'fzf a fuzzy finder'
 brew install fzf
 
-echo 'tealdeer as a fast tldr alternative' >&3
+log 'tealdeer as a fast tldr alternative'
 brew install tealdeer
 
 # disabled because has an error in stty
 # see https://github.com/uutils/coreutils/issues/8608
-#echo 'uutils as a coreutils alternative' >&3
+#log 'uutils as a coreutils alternative'
 #brew install uutils-coreutils
 
-echo 'zoxide as a cd alternative' >&3
+log 'zoxide as a cd alternative'
 brew install zoxide
 create_symlink "$(which zoxide)" "$HOME/.local/bin/cd"
 
-echo 'yq to process yaml, json, xml, csv' >&3
+log 'yq to process yaml, json, xml, csv'
 brew install yq
 
-echo 'fastfetch to show system information' >&3
+log 'fastfetch to show system information'
 brew install fastfetch
 
-echo 'bbrew a TUI for Brew' >&3
+log 'bbrew a TUI for Brew'
 brew install Valkyrie00/homebrew-bbrew/bbrew
 
 to_dotfilesrc '. "$DOTFILES_PATH/terminal-tools/env"'

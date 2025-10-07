@@ -34,11 +34,11 @@ echo "User: $(whoami)"
 echo "System: $(uname -a)"
 echo "$(hr)"
 
-echo >&3
-echo "$(hr)" >&3
-echo "$(a bold 'Running Setup...')" >&3
-echo "Log file: $LOG_FILE" >&3
-echo "$(hr)" >&3
+log
+log "$(hr)"
+log "$(a bold 'Running Setup...')"
+log "Log file: $LOG_FILE"
+log "$(hr)"
 
 if [ $# -eq 0 ]; then
   # (re)create .dotfilesrc in full setup
@@ -50,14 +50,14 @@ if [ $# -eq 0 ]; then
   # the order here matters!
   modules="base local fonts ssh gpg cargo flatpak homebrew git vim terminal-tools podman node uv alacritty devtoolbox"
 
-  echo >&3
-  echo "$(hr)" >&3
-  echo 'Performing FULL setup...' >&3
-  echo "modules: $modules" >&3
-  echo >&3
+  log
+  log "$(hr)"
+  log 'Performing FULL setup...'
+  log "modules: $modules"
+  log
 else
   if [ ! -f "$DOTFILESRC_PATH" ]; then
-    echo "Error: Please run full setup first (without parameters)" >&3
+    log "Error: Please run full setup first (without parameters)"
     exit 1
   fi
 
@@ -67,26 +67,33 @@ fi
 save_IFS=$IFS
 IFS=' '
 for module in $modules; do
-  echo >&3
-  echo "$(hr)" >&3
-  echo "Performing '$module' module setup..." >&3
+  log
+  log "$(hr)"
+  log "Performing '$module' module setup..."
 
   if [ ! -f "$DOTFILES_PATH/$module/setup.sh" ]; then
-    echo "Error: Module '$module' does not exist." >&3
+    log "Error: Module '$module' does not exist."
     exit 1
   fi
 
-  # shellcheck disable=SC1090
-  . "$DOTFILES_PATH/$module/setup.sh"
+  # FIXME this subshell error handling is not working as expected
+  {
+    # shellcheck disable=SC1090
+    . "$DOTFILES_PATH/$module/setup.sh"
+  } || {
+    log "Error: Module '$module' setup failed."
+    log "See $LOG_FILE for details."
+    exit 1
+  }
 done
 IFS=$save_IFS
 
 to_bashrc ". \"$DOTFILESRC_PATH\""
 
-echo >&3
-echo "$(hr)" >&3
-echo "$(fgc green)$(e check) Setup done!$(fgc end)" >&3
-echo "Reopen your terminal" >&3
-echo "$(hr)" >&3
+log
+log "$(hr)"
+log "$(fgc green)$(e check) Setup done!$(fgc end)"
+log "Reopen your terminal"
+log "$(hr)"
 
 exit 0
