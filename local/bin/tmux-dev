@@ -1,0 +1,45 @@
+#!/usr/bin/env sh
+
+workspace_dir="$HOME/workspace/"
+project_name="$1"
+project_dir="$workspace_dir/$project_name"
+
+cd "${workspace_dir}" || {
+  echo "ERROR: Workspace directory ${workspace_dir} does not exist" >&2
+  exit 1
+}
+
+if [ ! -d "$project_dir" ]; then
+  gh repo clone "$project_name" "$project_dir" || {
+    echo "ERROR: Could not clone repository ${project_name}" >&2
+    exit 1
+  }
+fi
+
+cd "$project_dir" || {
+  echo "ERROR: Could not change directory to ${project_dir}" >&2
+  exit 1
+}
+
+if ! tmux has-session -t "$project_name"; then
+  tmux new-session -s "$project_name" -n "$project_name" -d
+
+  # create moar windows
+  tmux new-window -t "$project_name":1 -n Code
+  tmux new-window -t "$project_name":2 -n Server
+  tmux new-window -t "$project_name":3 -n AI
+
+  tmux send-keys -t "$project_name":0.0 "cd ${PWD}" C-m
+  tmux send-keys -t "$project_name":1.0 "cd ${PWD} && nvim" C-m
+  tmux send-keys -t "$project_name":2.0 "cd ${PWD}" C-m
+  tmux send-keys -t "$project_name":3.0 "cd ${PWD} && opencode" C-m
+
+  # select the server window and pane
+  tmux select-window -t "$project_name":1.0
+fi
+
+if [ -n "$TMUX" ]; then
+  tmux switch-client -t "$project_name"
+else
+  tmux attach -t "$project_name"
+fi

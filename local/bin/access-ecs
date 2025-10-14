@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+
+set -e
+
+main() {
+  cluster="$1"
+  task="$2"
+  container="$3"
+
+  if [ -z "$cluster" ] || [ -z "$container" ] || [ -z "$task" ]; then
+    echo "Usage: $0 <cluster> <task> <container>"
+    exit 1
+  fi
+
+  # Confirm that the command will execute
+  echo "Executing command on ECS: Cluster=$cluster, Task=$task, Container=$container"
+
+  aws ecs execute-command --cluster "$cluster" --task "$task" --container "$container" --interactive --command '/bin/sh'
+
+  echo "Command executed successfully."
+
+  return
+}
+
+main "$@"
