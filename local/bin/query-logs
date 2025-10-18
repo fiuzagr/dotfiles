@@ -1,0 +1,405 @@
+#!/usr/bin/env sh
+
+set -ae
+
+log() {
+  echo "$*" >&2
+  return
+}
+
+setup_cache_dir() {
+  ql_xdg_cache="${XDG_CACHE_HOME:-$HOME/.cache}"
+  ql_cache_dir="$ql_xdg_cache/query-logs"
+
+  mkdir -p "$ql_cache_dir/queries" "$ql_cache_dir/temp"
+  touch "$ql_cache_dir/history.txt"
+
+  echo "$ql_cache_dir"
+}
+
+validate_aws_cli() {
+  if ! command -v aws >/dev/null 2>&1; then
+    log "Error: AWS CLI not found. Please install aws-cli."
+    exit 1
+  fi
+
+  if ! aws sts get-caller-identity >/dev/null 2>&1; then
+    log "Error: AWS credentials not configured or invalid."
+    exit 1
+  fi
+}
+
+list_log_groups() {
+  ql_cache_dir="$1"
+  log "Fetching available log groups..."
+
+  ql_temp_file="$ql_cache_dir/temp/log_groups.txt"
+  if ! aws logs describe-log-groups \
+    --query 'logGroups[].logGroupName' \
+    --output text | tr '\t' '\n' >"$ql_temp_file" 2>/dev/null; then
+    log "Error: Failed to fetch log groups from AWS."
+    exit 1
+  fi
+
+  if [ ! -s "$ql_temp_file" ]; then
+    log "Error: No log groups found."
+    exit 1
+  fi
+
+  log "Available log groups:"
+  log
+
+  ql_count=1
+  while IFS= read -r ql_group; do
+    printf "%3d) %s\n" "$ql_count" "$ql_group" >&2
+    ql_count=$((ql_count + 1))
+  done <"$ql_temp_file"
+
+  log
+  printf "Select log group (1-%d): " $((ql_count - 1)) >&2
+  read -r ql_selection
+
+  if ! echo "$ql_selection" | grep -q '^[0-9]\+$' ||
+    [ "$ql_selection" -lt 1 ] ||
+    [ "$ql_selection" -ge "$ql_count" ]; then
+    log "Error: Invalid selection."
+    exit 1
+  fi
+
+  ql_selected_group=$(sed -n "${ql_selection}p" "$ql_temp_file")
+  echo "$ql_selected_group"
+}
+
+parse_time() {
+  ql_input="$1"
+  ql_current_time=$(date +%s)
+
+  case "$ql_input" in
+  "now")
+    echo "$ql_current_time"
+    ;;
+  *"h ago")
+    ql_hours=$(echo "$ql_input" | sed 's/h ago//')
+    if echo "$ql_hours" | grep -q '^[0-9]\+$'; then
+      echo $((ql_current_time - ql_hours * 3600))
+    else
+      log "Error: Invalid time format: $ql_input"
+      exit 1
+    fi
+    ;;
+  *"m ago")
+    ql_minutes=$(echo "$ql_input" | sed 's/m ago//')
+    if echo "$ql_minutes" | grep -q '^[0-9]\+$'; then
+      echo $((ql_current_time - ql_minutes * 60))
+    else
+      log "Error: Invalid time format: $ql_input"
+      exit 1
+    fi
+    ;;
+  "today")
+    date -d "today 00:00:00" +%s 2>/dev/null ||
+      date -j -f "%Y-%m-%d %H:%M:%S" "$(date +%Y-%m-%d) 00:00:00" +%s 2>/dev/null ||
+      echo "$ql_current_time"
+    ;;
+  "yesterday")
+    date -d "yesterday 00:00:00" +%s 2>/dev/null ||
+      date -j -f "%Y-%m-%d %H:%M:%S" "$(date -v-1d +%Y-%m-%d) 00:00:00" +%s 2>/dev/null ||
+      echo $((ql_current_time - 86400))
+    ;;
+  [0-9]*)
+    if echo "$ql_input" | grep -q '^[0-9]\+$'; then
+      echo "$ql_input"
+    elif echo "$ql_input" | grep -q '^[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}'; then
+      date -d "$ql_input" +%s 2>/dev/null ||
+        date -j -f "%Y-%m-%d %H:%M:%S" "$ql_input 00:00:00" +%s 2>/dev/null || {
+        log "Error: Invalid date format: $ql_input"
+        exit 1
+      }
+    else
+      log "Error: Invalid time format: $ql_input"
+      exit 1
+    fi
+    ;;
+  *)
+    log "Error: Invalid time format: $ql_input"
+    exit 1
+    ;;
+  esac
+}
+
+get_time_input() {
+  log "Time format examples:"
+  log "  - Unix timestamp: 1640995200"
+  log "  - ISO date: 2022-01-01"
+  log "  - Relative: 1h ago, 30m ago"
+  log "  - Keywords: now, today, yesterday"
+  log
+
+  log "Start time: "
+  read -r ql_start_input
+  ql_start_time=$(parse_time "$ql_start_input")
+
+  log "End time (default: now): "
+  read -r ql_end_input
+  if [ -z "$ql_end_input" ]; then
+    ql_end_input="now"
+  fi
+  ql_end_time=$(parse_time "$ql_end_input")
+
+  if [ "$ql_start_time" -ge "$ql_end_time" ]; then
+    log "Error: Start time must be before end time."
+    exit 1
+  fi
+
+  echo "$ql_start_time $ql_end_time"
+}
+
+show_query_history() {
+  ql_history_file="$1/history.txt"
+
+  if [ ! -s "$ql_history_file" ]; then
+    echo "0"
+    return
+  fi
+
+  log "Recent queries:"
+  log
+
+  ql_temp_history="$1/temp/recent_queries.txt"
+  tail -50 "$ql_history_file" >"$ql_temp_history"
+
+  ql_count=0
+  while IFS='|' read -r ql_timestamp ql_log_group ql_query_text; do
+    ql_count=$((ql_count + 1))
+    ql_date=$(date -d "@$ql_timestamp" "+%Y-%m-%d %H:%M" 2>/dev/null ||
+      date -r "$ql_timestamp" "+%Y-%m-%d %H:%M" 2>/dev/null ||
+      echo "$ql_timestamp")
+    printf "%3d) [%s] %s\n" "$ql_count" "$ql_date" "$ql_log_group" >&2
+    printf "     %s\n" "$ql_query_text" >&2
+  done <"$ql_temp_history"
+
+  echo "$ql_count"
+}
+
+select_or_create_query() {
+  ql_cache_dir="$1"
+  ql_log_group="$2"
+
+  ql_history_count=$(show_query_history "$ql_cache_dir")
+
+  if [ "$ql_history_count" -gt 0 ]; then
+    printf "Select query (1-%d) or 'n' for new: " "$ql_history_count" >&2
+    read -r ql_selection
+  else
+    log "(no history found)"
+    ql_selection="n"
+  fi
+
+  if [ "$ql_selection" = "n" ]; then
+    log "Enter new query: "
+    read -r ql_query_text
+
+    if [ -z "$ql_query_text" ]; then
+      log "Error: Query cannot be empty."
+      exit 1
+    fi
+    
+    echo "$ql_query_text|new"
+  else
+    if ! echo "$ql_selection" | grep -q '^[0-9]\+$' ||
+      [ "$ql_selection" -lt 1 ] ||
+      [ "$ql_selection" -gt "$ql_history_count" ]; then
+      log "Error: Invalid selection."
+      exit 1
+    fi
+
+    ql_query_text=$(tail -10 "$ql_cache_dir/history.txt" |
+      sed -n "${ql_selection}p" |
+      cut -d'|' -f3)
+    
+    echo "$ql_query_text|existing"
+  fi
+}
+
+save_query_to_history() {
+  ql_cache_dir="$1"
+  ql_log_group="$2"
+  ql_query_text="$3"
+  ql_timestamp=$(date +%s)
+
+  echo "$ql_timestamp|$ql_log_group|$ql_query_text" >>"$ql_cache_dir/history.txt"
+}
+
+execute_query() {
+  ql_log_group="$1"
+  ql_start_time="$2"
+  ql_end_time="$3"
+  ql_query_text="$4"
+
+  log "Executing query..."
+
+  ql_query_id=$(aws logs start-query \
+    --log-group-name "$ql_log_group" \
+    --start-time "$ql_start_time" \
+    --end-time "$ql_end_time" \
+    --query-string "$ql_query_text" \
+    --output text)
+
+  if [ -z "$ql_query_id" ]; then
+    log "Error: Failed to start query."
+    exit 1
+  fi
+
+  echo "$ql_query_id"
+}
+
+wait_and_fetch_results() {
+  ql_query_id="$1"
+  ql_cache_dir="$2"
+  ql_log_group="$3"
+  ql_query_text="$4"
+
+  log "Query ID: $ql_query_id"
+  log "Polling query status every 5 seconds..."
+
+  ql_results_file="$ql_cache_dir/queries/${ql_query_id}-results.txt"
+  ql_metadata_file="$ql_cache_dir/queries/${ql_query_id}-metadata.json"
+  
+  ql_attempts=0
+  ql_max_attempts=60  # 5 minutes maximum (60 * 5 seconds)
+  
+  while [ "$ql_attempts" -lt "$ql_max_attempts" ]; do
+    # Fetch current query status
+    if ! aws logs get-query-results \
+      --query-id "$ql_query_id" \
+      --output json >"$ql_metadata_file" 2>/dev/null; then
+      log "Error: Failed to fetch query status."
+      exit 1
+    fi
+
+    ql_status=$(grep '"status"' "$ql_metadata_file" |
+      sed 's/.*"status": "\([^"]*\)".*/\1/')
+    
+    case "$ql_status" in
+    "Complete")
+      log "Query completed successfully!"
+      break
+      ;;
+    "Running")
+      ql_attempts=$((ql_attempts + 1))
+      log "Status: Running (attempt $ql_attempts/$ql_max_attempts)"
+      sleep 5
+      ;;
+    "Failed")
+      log "Error: Query failed."
+      exit 1
+      ;;
+    *)
+      ql_attempts=$((ql_attempts + 1))
+      log "Status: $ql_status (attempt $ql_attempts/$ql_max_attempts)"
+      sleep 5
+      ;;
+    esac
+  done
+  
+  # Check if we timed out
+  if [ "$ql_attempts" -ge "$ql_max_attempts" ]; then
+    log "Error: Query timeout after 5 minutes."
+    exit 1
+  fi
+  
+  # Process results only when status is Complete
+  log "Processing query results..."
+  
+  if command -v jq >/dev/null 2>&1; then
+    jq -r '.results[] | map(.value) | @tsv' "$ql_metadata_file" >"$ql_results_file"
+  else
+    grep -o '"value": "[^"]*"' "$ql_metadata_file" |
+      sed 's/"value": "\([^"]*\)"/\1/' >"$ql_results_file"
+  fi
+
+  ql_result_count=$(wc -l <"$ql_results_file")
+  log "Results saved: $ql_results_file ($ql_result_count lines)"
+  log
+  log "Query metadata: $ql_metadata_file"
+  log "Query results: $ql_results_file"
+}
+
+show_help() {
+  cat <<EOF
+AWS CloudWatch Logs Query Tool
+
+Usage: query-logs [OPTIONS]
+
+This script provides an interactive interface to query AWS CloudWatch Logs
+using AWS Logs Insights. It manages query history and saves results to
+\$XDG_CACHE_HOME/query-logs/
+
+Features:
+  - Interactive log group selection
+  - Flexible time input (relative, absolute, keywords)
+  - Query history management
+  - Automatic result retrieval and caching
+
+Time Format Examples:
+  - Unix timestamp: 1640995200
+  - ISO date: 2022-01-01
+  - Relative: 1h ago, 30m ago, 2h ago
+  - Keywords: now, today, yesterday
+
+Options:
+  -h, --help    Show this help message
+
+Requirements:
+  - AWS CLI installed and configured
+  - Valid AWS credentials
+
+Cache Location:
+  - Results: \$XDG_CACHE_HOME/query-logs/queries/
+  - History: \$XDG_CACHE_HOME/query-logs/history.txt
+EOF
+}
+
+main() {
+  case "${1:-}" in
+  -h | --help)
+    show_help
+    exit 0
+    ;;
+  *) ;;
+  esac
+
+  log "=== AWS CloudWatch Logs Query Tool ==="
+  log
+
+  validate_aws_cli
+  ql_cache_dir=$(setup_cache_dir)
+
+  ql_log_group=$(list_log_groups "$ql_cache_dir")
+  log "Selected log group: $ql_log_group"
+  log
+
+  ql_times=$(get_time_input)
+  ql_start_time=$(echo "$ql_times" | cut -d' ' -f1)
+  ql_end_time=$(echo "$ql_times" | cut -d' ' -f2)
+  log "Time range: $(date -d "@$ql_start_time" 2>/dev/null || date -r "$ql_start_time" 2>/dev/null) to $(date -d "@$ql_end_time" 2>/dev/null || date -r "$ql_end_time" 2>/dev/null)"
+  log
+
+  ql_query_result=$(select_or_create_query "$ql_cache_dir" "$ql_log_group")
+  ql_query_text=$(echo "$ql_query_result" | cut -d'|' -f1)
+  ql_query_type=$(echo "$ql_query_result" | cut -d'|' -f2)
+  log "Query: $ql_query_text"
+  log
+
+  if [ "$ql_query_type" = "new" ]; then
+    save_query_to_history "$ql_cache_dir" "$ql_log_group" "$ql_query_text"
+  fi
+
+  ql_query_id=$(execute_query "$ql_log_group" "$ql_start_time" "$ql_end_time" "$ql_query_text")
+
+  wait_and_fetch_results "$ql_query_id" "$ql_cache_dir" "$ql_log_group" "$ql_query_text"
+}
+
+if [ "${0##*/}" = "query-logs" ]; then
+  main "$@"
+fi

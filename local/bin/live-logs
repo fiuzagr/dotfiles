@@ -1,0 +1,167 @@
+#!/usr/bin/env sh
+
+set -ae
+
+log() {
+  echo "$*" >&2
+  return
+}
+
+validate_aws_cli() {
+  if ! command -v aws >/dev/null 2>&1; then
+    log "Error: AWS CLI not found. Please install aws-cli."
+    exit 1
+  fi
+
+  if ! aws sts get-caller-identity >/dev/null 2>&1; then
+    log "Error: AWS credentials not configured or invalid."
+    exit 1
+  fi
+}
+
+list_log_groups() {
+  log "Fetching available log groups..."
+
+  ll_temp_names="/tmp/live_logs_names_$$"
+  ll_temp_arns="/tmp/live_logs_arns_$$"
+
+  if ! aws logs describe-log-groups \
+    --query 'logGroups[].[logGroupName,arn]' \
+    --output text >"$ll_temp_names" 2>/dev/null; then
+    log "Error: Failed to fetch log groups from AWS."
+    exit 1
+  fi
+
+  if [ ! -s "$ll_temp_names" ]; then
+    log "Error: No log groups found."
+    exit 1
+  fi
+
+  log "Available log groups:"
+  log
+
+  ll_count=1
+  while IFS='	' read -r ll_name ll_arn; do
+    printf "%3d) %s\n" "$ll_count" "$ll_name" >&2
+    ll_clean_arn=$(echo "$ll_arn" | sed 's/:\*$//')
+    echo "$ll_clean_arn" >>"$ll_temp_arns"
+    ll_count=$((ll_count + 1))
+  done <"$ll_temp_names"
+
+  log
+  printf "Select log group (1-%d): " $((ll_count - 1)) >&2
+  read -r ll_selection
+
+  if ! echo "$ll_selection" | grep -q '^[0-9]\+$' ||
+    [ "$ll_selection" -lt 1 ] ||
+    [ "$ll_selection" -ge "$ll_count" ]; then
+    log "Error: Invalid selection."
+    rm -f "$ll_temp_names" "$ll_temp_arns"
+    exit 1
+  fi
+
+  ll_selected_arn=$(sed -n "${ll_selection}p" "$ll_temp_arns")
+  ll_selected_name=$(sed -n "${ll_selection}p" "$ll_temp_names" | cut -f1)
+  rm -f "$ll_temp_names" "$ll_temp_arns"
+  echo "$ll_selected_arn|$ll_selected_name"
+}
+
+get_filter_pattern() {
+  log "Filter pattern examples:"
+  log "  - ERROR"
+  log "  - \"[ERROR]\""
+  log "  - \"{ $.level = \"ERROR\" }\""
+  log "  - [timestamp, request_id=\"*\"]"
+  log
+  printf "Enter filter pattern (or press Enter for none): " >&2
+  read -r ll_filter
+  echo "$ll_filter"
+}
+
+start_live_tail() {
+  ll_log_arn="$1"
+  ll_log_name="$2"
+  ll_filter="$3"
+
+  log "Starting live tail for log group: $ll_log_name"
+  log "Using ARN: $ll_log_arn"
+  if [ -n "$ll_filter" ]; then
+    log "Filter pattern: $ll_filter"
+  else
+    log "No filter pattern specified"
+  fi
+  log
+  log "Press Ctrl+C to stop streaming..."
+  log
+
+  if [ -n "$ll_filter" ]; then
+    aws logs start-live-tail \
+      --log-group-identifiers "$ll_log_arn" \
+      --log-event-filter-pattern "$ll_filter"
+  else
+    aws logs start-live-tail \
+      --log-group-identifiers "$ll_log_arn"
+  fi
+}
+
+show_help() {
+  cat <<EOF
+AWS CloudWatch Live Logs Streaming Tool
+
+Usage: live-logs [OPTIONS]
+
+This script provides an interactive interface to stream AWS CloudWatch Logs
+in real-time using 'aws logs start-live-tail'.
+
+Features:
+  - Interactive log group selection
+  - Optional filter pattern support
+  - Real-time log streaming
+  - Simple and direct interface
+
+Filter Pattern Examples:
+  - ERROR                           (simple text match)
+  - "[ERROR]"                       (exact match)
+  - "{ \$.level = \"ERROR\" }"      (JSON filter)
+  - [timestamp, request_id="*"]     (field extraction)
+
+Options:
+  -h, --help    Show this help message
+
+Requirements:
+  - AWS CLI installed and configured
+  - Valid AWS credentials
+
+Note:
+  Press Ctrl+C to stop the live stream.
+EOF
+}
+
+main() {
+  case "${1:-}" in
+  -h | --help)
+    show_help
+    exit 0
+    ;;
+  *) ;;
+  esac
+
+  log "=== AWS CloudWatch Live Logs Tool ==="
+  log
+
+  validate_aws_cli
+
+  ll_result=$(list_log_groups)
+  ll_log_arn=$(echo "$ll_result" | cut -d'|' -f1)
+  ll_log_name=$(echo "$ll_result" | cut -d'|' -f2)
+  log "Selected log group: $ll_log_name"
+  log
+
+  ll_filter=$(get_filter_pattern)
+
+  start_live_tail "$ll_log_arn" "$ll_log_name" "$ll_filter"
+}
+
+if [ "${0##*/}" = "live-logs" ]; then
+  main "$@"
+fi
