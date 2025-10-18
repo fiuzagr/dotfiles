@@ -20,10 +20,17 @@ validate_aws_cli() {
 }
 
 list_log_groups() {
-  log "Fetching available log groups..."
+  ll_filter_name="$1"
+  
+  if [ -n "$ll_filter_name" ]; then
+    log "Fetching log groups matching '$ll_filter_name'..."
+  else
+    log "Fetching available log groups..."
+  fi
 
   ll_temp_names="/tmp/live_logs_names_$$"
   ll_temp_arns="/tmp/live_logs_arns_$$"
+  ll_temp_filtered="/tmp/live_logs_filtered_$$"
 
   if ! aws logs describe-log-groups \
     --query 'logGroups[].[logGroupName,arn]' \
@@ -37,7 +44,29 @@ list_log_groups() {
     exit 1
   fi
 
-  log "Available log groups:"
+  # Filter log groups if filter is provided
+  if [ -n "$ll_filter_name" ]; then
+    if ! grep -i "$ll_filter_name" "$ll_temp_names" >"$ll_temp_filtered"; then
+      log "Error: No log groups found matching '$ll_filter_name'."
+      rm -f "$ll_temp_names" "$ll_temp_arns" "$ll_temp_filtered"
+      exit 1
+    fi
+    
+    if [ ! -s "$ll_temp_filtered" ]; then
+      log "Error: No log groups found matching '$ll_filter_name'."
+      rm -f "$ll_temp_names" "$ll_temp_arns" "$ll_temp_filtered"
+      exit 1
+    fi
+    
+    # Replace original with filtered results
+    mv "$ll_temp_filtered" "$ll_temp_names"
+  fi
+
+  if [ -n "$ll_filter_name" ]; then
+    log "Available log groups matching '$ll_filter_name':"
+  else
+    log "Available log groups:"
+  fi
   log
 
   ll_count=1
@@ -56,13 +85,13 @@ list_log_groups() {
     [ "$ll_selection" -lt 1 ] ||
     [ "$ll_selection" -ge "$ll_count" ]; then
     log "Error: Invalid selection."
-    rm -f "$ll_temp_names" "$ll_temp_arns"
+    rm -f "$ll_temp_names" "$ll_temp_arns" "$ll_temp_filtered"
     exit 1
   fi
 
   ll_selected_arn=$(sed -n "${ll_selection}p" "$ll_temp_arns")
   ll_selected_name=$(sed -n "${ll_selection}p" "$ll_temp_names" | cut -f1)
-  rm -f "$ll_temp_names" "$ll_temp_arns"
+  rm -f "$ll_temp_names" "$ll_temp_arns" "$ll_temp_filtered"
   echo "$ll_selected_arn|$ll_selected_name"
 }
 
@@ -108,13 +137,22 @@ show_help() {
   cat <<EOF
 AWS CloudWatch Live Logs Streaming Tool
 
-Usage: live-logs [OPTIONS]
+Usage: live-logs [FILTER] [OPTIONS]
 
 This script provides an interactive interface to stream AWS CloudWatch Logs
 in real-time using 'aws logs start-live-tail'.
 
+Arguments:
+  FILTER        Optional string to filter log groups by name (case-insensitive)
+
+Examples:
+  live-logs                    # Show all log groups
+  live-logs elevify            # Show only log groups containing "elevify"
+  live-logs "/aws/lambda"      # Show only Lambda log groups
+
 Features:
   - Interactive log group selection
+  - Log group name filtering
   - Optional filter pattern support
   - Real-time log streaming
   - Simple and direct interface
@@ -138,12 +176,16 @@ EOF
 }
 
 main() {
+  ll_log_filter=""
+  
   case "${1:-}" in
   -h | --help)
     show_help
     exit 0
     ;;
-  *) ;;
+  *)
+    ll_log_filter="$1"
+    ;;
   esac
 
   log "=== AWS CloudWatch Live Logs Tool ==="
@@ -151,7 +193,7 @@ main() {
 
   validate_aws_cli
 
-  ll_result=$(list_log_groups)
+  ll_result=$(list_log_groups "$ll_log_filter")
   ll_log_arn=$(echo "$ll_result" | cut -d'|' -f1)
   ll_log_name=$(echo "$ll_result" | cut -d'|' -f2)
   log "Selected log group: $ll_log_name"
