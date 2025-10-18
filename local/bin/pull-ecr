@@ -1,0 +1,163 @@
+#!/usr/bin/env sh
+
+set -ae
+
+validate_aws_cli() {
+  if ! command -v aws >/dev/null 2>&1; then
+    echo "Error: AWS CLI is not installed or not in PATH" >&2
+    exit 1
+  fi
+
+  if ! aws sts get-caller-identity >/dev/null 2>&1; then
+    echo "Error: AWS credentials not configured or invalid" >&2
+    exit 1
+  fi
+
+  return
+}
+
+validate_docker() {
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "Error: Docker is not installed or not in PATH" >&2
+    exit 1
+  fi
+
+  if ! docker info >/dev/null 2>&1; then
+    echo "Error: Docker daemon is not running" >&2
+    exit 1
+  fi
+
+  return
+}
+
+prompt_selection() {
+  ps_prompt="$1"
+  ps_count="$2"
+
+  printf "%s (1-%d): " "$ps_prompt" "$ps_count" >&2
+  read -r selection
+
+  if [ -z "$selection" ] || [ "$selection" -lt 1 ] || [ "$selection" -gt "$ps_count" ]; then
+    echo "Error: Invalid selection. Please choose a number between 1 and $ps_count" >&2
+    return 1
+  fi
+
+  echo "$selection"
+  return 0
+}
+
+select_repository() {
+  echo "Fetching available ECR repositories..." >&2
+  repositories=$(aws ecr describe-repositories --query 'repositories[].repositoryName' --output text 2>/dev/null)
+
+  if [ -z "$repositories" ]; then
+    echo "Error: No ECR repositories found" >&2
+    exit 1
+  fi
+
+  sr_count=0
+  echo >&2
+  echo "Available repositories:" >&2
+  for repository in $repositories; do
+    sr_count=$((sr_count + 1))
+    echo "$sr_count. $repository" >&2
+  done
+
+  echo >&2
+  if ! selection=$(prompt_selection "Select repository" "$sr_count"); then
+    exit 1
+  fi
+
+  sr_current=0
+  for repository in $repositories; do
+    sr_current=$((sr_current + 1))
+    if [ "$sr_current" -eq "$selection" ]; then
+      echo "$repository"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+prompt_tag() {
+  pt_repository="$1"
+
+  printf "Enter image tag for '%s' (e.g., latest, v1.0.0): " "$pt_repository" >&2
+  read -r tag
+
+  if [ -z "$tag" ]; then
+    echo "Error: Tag cannot be empty" >&2
+    exit 1
+  fi
+
+  echo "$tag"
+  return 0
+}
+
+get_registry_url() {
+  aws ecr describe-repositories --repository-names "$1" --query 'repositories[0].repositoryUri' --output text 2>/dev/null | sed 's|/[^/]*$||'
+}
+
+get_region() {
+  aws configure get region 2>/dev/null || echo "us-east-1"
+}
+
+ecr_login() {
+  el_region="$1"
+  el_registry_url="$2"
+
+  echo "Authenticating with ECR..." >&2
+  if ! aws ecr get-login-password --region "$el_region" | docker login --username AWS --password-stdin "$el_registry_url" >/dev/null 2>&1; then
+    echo "Error: Failed to authenticate with ECR" >&2
+    exit 1
+  fi
+
+  echo "Successfully authenticated with ECR" >&2
+  return 0
+}
+
+pull_image() {
+  pi_repository="$1"
+  pi_tag="$2"
+
+  repository_uri=$(aws ecr describe-repositories --repository-names "$pi_repository" --query 'repositories[0].repositoryUri' --output text 2>/dev/null)
+  
+  if [ -z "$repository_uri" ]; then
+    echo "Error: Failed to get repository URI for '$pi_repository'" >&2
+    exit 1
+  fi
+
+  full_image_uri="${repository_uri}:${pi_tag}"
+
+  echo "Pulling image: $full_image_uri" >&2
+  if ! docker pull "$full_image_uri"; then
+    echo "Error: Failed to pull image '$full_image_uri'" >&2
+    exit 1
+  fi
+
+  echo "Successfully pulled image: $full_image_uri" >&2
+  return 0
+}
+
+main() {
+  echo "=== ECR Image Pull Tool ===" >&2
+  echo >&2
+
+  validate_aws_cli
+  validate_docker
+
+  repository=$(select_repository)
+  tag=$(prompt_tag "$repository")
+  
+  region=$(get_region)
+  registry_url=$(get_registry_url "$repository")
+
+  ecr_login "$region" "$registry_url"
+  pull_image "$repository" "$tag"
+
+  echo >&2
+  echo "Image pull completed successfully!" >&2
+}
+
+main "$@"

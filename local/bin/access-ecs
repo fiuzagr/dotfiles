@@ -1,25 +1,233 @@
 #!/usr/bin/env sh
 
-set -e
+set -ae
+
+validate_aws_cli() {
+  if ! command -v aws >/dev/null 2>&1; then
+    echo "Error: AWS CLI is not installed or not in PATH" >&2
+    exit 1
+  fi
+
+  if ! aws sts get-caller-identity >/dev/null 2>&1; then
+    echo "Error: AWS credentials not configured or invalid" >&2
+    exit 1
+  fi
+
+  return
+}
+
+prompt_selection() {
+  ps_prompt="$1"
+  ps_count="$2"
+
+  printf "%s (1-%d): " "$ps_prompt" "$ps_count" >&2
+  read -r selection
+
+  if [ -z "$selection" ] || [ "$selection" -lt 1 ] || [ "$selection" -gt "$ps_count" ]; then
+    echo "Error: Invalid selection. Please choose a number between 1 and $ps_count" >&2
+    return 1
+  fi
+
+  echo "$selection"
+  return 0
+}
+
+select_cluster() {
+  echo "Fetching available ECS clusters..." >&2
+  clusters=$(aws ecs list-clusters --query 'clusterArns[]' --output text 2>/dev/null)
+
+  if [ -z "$clusters" ]; then
+    echo "Error: No ECS clusters found" >&2
+    exit 1
+  fi
+
+  sc_count=0
+  echo >&2
+  echo "Available clusters:" >&2
+  for cluster in $clusters; do
+    sc_count=$((sc_count + 1))
+    cluster_name=$(echo "$cluster" | sed 's|.*/||')
+    echo "$sc_count. $cluster_name" >&2
+  done
+
+  echo >&2
+  if ! selection=$(prompt_selection "Select cluster" "$sc_count"); then
+    exit 1
+  fi
+
+  sc_current=0
+  for cluster in $clusters; do
+    sc_current=$((sc_current + 1))
+    if [ "$sc_current" -eq "$selection" ]; then
+      echo "$cluster" | sed 's|.*/||'
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+select_service() {
+  ss_cluster="$1"
+
+  echo "Fetching services for cluster '$ss_cluster'..." >&2
+  services=$(aws ecs list-services --cluster "$ss_cluster" --query 'serviceArns[]' --output text 2>/dev/null)
+
+  if [ -z "$services" ]; then
+    echo "Error: No services found in cluster '$ss_cluster'" >&2
+    exit 1
+  fi
+
+  ss_count=0
+  echo >&2
+  echo "Available services in cluster '$ss_cluster':" >&2
+  for service in $services; do
+    ss_count=$((ss_count + 1))
+    service_name=$(echo "$service" | sed 's|.*/||')
+    echo "$ss_count. $service_name" >&2
+  done
+
+  echo >&2
+  if ! selection=$(prompt_selection "Select service" "$ss_count"); then
+    exit 1
+  fi
+
+  ss_current=0
+  for service in $services; do
+    ss_current=$((ss_current + 1))
+    if [ "$ss_current" -eq "$selection" ]; then
+      echo "$service" | sed 's|.*/||'
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+select_task() {
+  st_cluster="$1"
+  st_service="$2"
+
+  echo "Fetching running tasks for service '$st_service'..." >&2
+  tasks=$(aws ecs list-tasks --cluster "$st_cluster" --service-name "$st_service" --desired-status RUNNING --query 'taskArns[]' --output text 2>/dev/null)
+
+  if [ -z "$tasks" ]; then
+    echo "Error: No running tasks found for service '$st_service'" >&2
+    exit 1
+  fi
+
+  st_count=0
+  echo >&2
+  echo "Available running tasks for service '$st_service':" >&2
+  for task in $tasks; do
+    st_count=$((st_count + 1))
+    task_id=$(echo "$task" | sed 's|.*/||')
+    echo "$st_count. $task_id" >&2
+  done
+
+  echo >&2
+  if ! selection=$(prompt_selection "Select task" "$st_count"); then
+    exit 1
+  fi
+
+  st_current=0
+  for task in $tasks; do
+    st_current=$((st_current + 1))
+    if [ "$st_current" -eq "$selection" ]; then
+      echo "$task" | sed 's|.*/||'
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+select_container() {
+  sc_cluster="$1"
+  sc_task="$2"
+
+  echo "Fetching containers for task '$sc_task'..." >&2
+  containers=$(aws ecs describe-tasks --cluster "$sc_cluster" --tasks "$sc_task" --query 'tasks[0].containers[?lastStatus==`RUNNING`].name' --output text 2>/dev/null)
+
+  if [ -z "$containers" ]; then
+    echo "Error: No running containers found in task '$sc_task'" >&2
+    exit 1
+  fi
+
+  sc_count=0
+  echo >&2
+  echo "Available running containers in task '$sc_task':" >&2
+  for container in $containers; do
+    sc_count=$((sc_count + 1))
+    echo "$sc_count. $container" >&2
+  done
+
+  echo >&2
+  if ! selection=$(prompt_selection "Select container" "$sc_count"); then
+    exit 1
+  fi
+
+  sc_current=0
+  for container in $containers; do
+    sc_current=$((sc_current + 1))
+    if [ "$sc_current" -eq "$selection" ]; then
+      echo "$container"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+execute_ecs_command() {
+  eec_cluster="$1"
+  eec_task="$2"
+  eec_container="$3"
+
+  echo
+  echo "Executing command on ECS:"
+  echo "  Cluster: $eec_cluster"
+  echo "  Task: $eec_task"
+  echo "  Container: $eec_container"
+  echo
+
+  aws ecs execute-command --cluster "$eec_cluster" --task "$eec_task" --container "$eec_container" --interactive --command '/bin/sh'
+
+  echo "Command executed successfully."
+  return
+}
 
 main() {
   cluster="$1"
   task="$2"
   container="$3"
 
-  if [ -z "$cluster" ] || [ -z "$container" ] || [ -z "$task" ]; then
-    echo "Usage: $0 <cluster> <task> <container>"
+  validate_aws_cli
+
+  # If all parameters provided, use direct mode (backward compatibility)
+  if [ -n "$cluster" ] && [ -n "$task" ] && [ -n "$container" ]; then
+    execute_ecs_command "$cluster" "$task" "$container"
+    return
+  fi
+
+  # Interactive mode
+  if [ -n "$cluster" ] || [ -n "$task" ] || [ -n "$container" ]; then
+    echo "Usage: $0 [<cluster> <task> <container>]"
+    echo "       $0 (for interactive mode)"
+    echo
+    echo "Note: Either provide all three parameters or none for interactive selection"
     exit 1
   fi
 
-  # Confirm that the command will execute
-  echo "Executing command on ECS: Cluster=$cluster, Task=$task, Container=$container"
+  echo "=== ECS Container Access Tool ==="
+  echo
 
-  aws ecs execute-command --cluster "$cluster" --task "$task" --container "$container" --interactive --command '/bin/sh'
+  cluster=$(select_cluster)
+  service=$(select_service "$cluster")
+  task=$(select_task "$cluster" "$service")
+  container=$(select_container "$cluster" "$task")
 
-  echo "Command executed successfully."
-
-  return
+  execute_ecs_command "$cluster" "$task" "$container"
 }
 
 main "$@"
