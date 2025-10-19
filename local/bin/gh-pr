@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+set -e
+
+main() {
+  gh_base="${1:-main}"
+
+  gh pr create --base "$gh_base" --assignee @me
+}
+main "$@"
