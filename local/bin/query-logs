@@ -169,7 +169,7 @@ show_query_history() {
   tail -50 "$ql_history_file" >"$ql_temp_history"
 
   ql_count=0
-  while IFS='|' read -r ql_timestamp ql_log_group ql_query_text; do
+  while IFS='	' read -r ql_timestamp ql_log_group ql_query_text; do
     ql_count=$((ql_count + 1))
     ql_date=$(date -d "@$ql_timestamp" "+%Y-%m-%d %H:%M" 2>/dev/null ||
       date -r "$ql_timestamp" "+%Y-%m-%d %H:%M" 2>/dev/null ||
@@ -203,8 +203,8 @@ select_or_create_query() {
       log "Error: Query cannot be empty."
       exit 1
     fi
-    
-    echo "$ql_query_text|new"
+
+    echo "$ql_query_text	new"
   else
     if ! echo "$ql_selection" | grep -q '^[0-9]\+$' ||
       [ "$ql_selection" -lt 1 ] ||
@@ -215,9 +215,9 @@ select_or_create_query() {
 
     ql_query_text=$(tail -10 "$ql_cache_dir/history.txt" |
       sed -n "${ql_selection}p" |
-      cut -d'|' -f3)
-    
-    echo "$ql_query_text|existing"
+      cut -d'	' -f3)
+
+    echo "$ql_query_text	existing"
   fi
 }
 
@@ -227,7 +227,7 @@ save_query_to_history() {
   ql_query_text="$3"
   ql_timestamp=$(date +%s)
 
-  echo "$ql_timestamp|$ql_log_group|$ql_query_text" >>"$ql_cache_dir/history.txt"
+  echo "$ql_timestamp	$ql_log_group	$ql_query_text" >>"$ql_cache_dir/history.txt"
 }
 
 execute_query() {
@@ -264,10 +264,10 @@ wait_and_fetch_results() {
 
   ql_results_file="$ql_cache_dir/queries/${ql_query_id}-results.txt"
   ql_metadata_file="$ql_cache_dir/queries/${ql_query_id}-metadata.json"
-  
+
   ql_attempts=0
-  ql_max_attempts=60  # 5 minutes maximum (60 * 5 seconds)
-  
+  ql_max_attempts=60 # 5 minutes maximum (60 * 5 seconds)
+
   while [ "$ql_attempts" -lt "$ql_max_attempts" ]; do
     # Fetch current query status
     if ! aws logs get-query-results \
@@ -279,7 +279,7 @@ wait_and_fetch_results() {
 
     ql_status=$(grep '"status"' "$ql_metadata_file" |
       sed 's/.*"status": "\([^"]*\)".*/\1/')
-    
+
     case "$ql_status" in
     "Complete")
       log "Query completed successfully!"
@@ -301,16 +301,16 @@ wait_and_fetch_results() {
       ;;
     esac
   done
-  
+
   # Check if we timed out
   if [ "$ql_attempts" -ge "$ql_max_attempts" ]; then
     log "Error: Query timeout after 5 minutes."
     exit 1
   fi
-  
+
   # Process results only when status is Complete
   log "Processing query results..."
-  
+
   if command -v jq >/dev/null 2>&1; then
     jq -r '.results[] | map(.value) | @tsv' "$ql_metadata_file" >"$ql_results_file"
   else
@@ -386,8 +386,8 @@ main() {
   log
 
   ql_query_result=$(select_or_create_query "$ql_cache_dir" "$ql_log_group")
-  ql_query_text=$(echo "$ql_query_result" | cut -d'|' -f1)
-  ql_query_type=$(echo "$ql_query_result" | cut -d'|' -f2)
+  ql_query_text=$(echo "$ql_query_result" | cut -d'	' -f1)
+  ql_query_type=$(echo "$ql_query_result" | cut -d'	' -f2)
   log "Query: $ql_query_text"
   log
 

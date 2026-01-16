@@ -5,3 +5,10 @@
 vim.keymap.set("n", "<leader>ba", function()
   Snacks.bufdelete.all()
 end, { desc = "Delete all Buffers" })
+
+vim.keymap.set(
+  "n",
+  "<leader>bw",
+  "<cmd>w<cr>",
+  { noremap = true, desc = "Save Buffer" }
+)
