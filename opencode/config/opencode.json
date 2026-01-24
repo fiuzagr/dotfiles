@@ -1,12 +1,17 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "theme": "everforest",
-  "lsp": { "clangd": { "disabled": true } },
   "mcp": {
     "MCP_DOCKER": {
       "type": "local",
       "command": ["docker", "mcp", "gateway", "run"],
       "enabled": true
+    },
+    "MCP_AI_CODERS": {
+      "type": "local",
+      "command": ["npx", "@ai-coders/context", "mcp"],
+      "enabled": false
     }
-  }
+  },
+  "plugin": ["oh-my-opencode"]
 }
