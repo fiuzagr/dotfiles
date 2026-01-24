@@ -64,6 +64,96 @@ to_bashrc() {
   return
 }
 
+# Get current operating system
+# Returns: "darwin" on macOS, "linux" on Linux, "unknown" otherwise
+# Usage: os=$(get_os)
+get_os() {
+  go_uname=$(uname -s)
+  case "$go_uname" in
+    Darwin*)
+      echo "darwin"
+      ;;
+    Linux*)
+      echo "linux"
+      ;;
+    *)
+      echo "unknown"
+      ;;
+  esac
+  return
+}
+
+# Check if running on macOS
+# Returns: 0 (success) on macOS, 1 otherwise
+# Usage: if is_macos; then ...; fi
+is_macos() {
+  im_os=$(get_os)
+  if [ "$im_os" = "darwin" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# Check if running on Linux
+# Returns: 0 (success) on Linux, 1 otherwise
+# Usage: if is_linux; then ...; fi
+is_linux() {
+  il_os=$(get_os)
+  if [ "$il_os" = "linux" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# Get current shell type
+# Returns: "zsh", "bash", or "bash" (fallback)
+# Usage: shell=$(get_shell)
+get_shell() {
+  gs_shell="$SHELL"
+  case "$gs_shell" in
+    *zsh)
+      echo "zsh"
+      ;;
+    *bash)
+      echo "bash"
+      ;;
+    *)
+      echo "bash"
+      ;;
+  esac
+  return
+}
+
+# Append a line to ~/.zshrc if it doesn't already exist
+# $1 - regex test OR line to append
+# $2 - line to append (if $1 is regex test)
+# Usages:
+#   to_zshrc 'export PATH=$HOME/.local/bin:$PATH'
+#   to_zshrc '\\.my_custom_script' 'source $HOME/.my_custom_script'
+to_zshrc() {
+  touch "$HOME/.zshrc"
+  to_file "$HOME/.zshrc" "$1" "$2"
+  return
+}
+
+# Append a line to shell RC file based on current shell
+# $1 - regex test OR line to append
+# $2 - line to append (if $1 is regex test)
+# Usages:
+#   to_shell_rc 'export PATH=$HOME/.local/bin:$PATH'
+#   to_shell_rc '\\.my_custom_script' 'source $HOME/.my_custom_script'
+to_shell_rc() {
+  tsr_shell=$(get_shell)
+  if [ "$tsr_shell" = "zsh" ]; then
+    to_zshrc "$1" "$2"
+  else
+    to_bashrc "$1" "$2"
+  fi
+  return
+}
+
 # Create a symbolic link, backing up any existing file/directory at the destination
 # $1 - source path
 # $2 - destination path
