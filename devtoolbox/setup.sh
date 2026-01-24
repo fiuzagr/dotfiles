@@ -1,3 +1,7 @@
 #!/usr/bin/env sh
 
-flatpak install -y --user flathub me.iepure.devtoolbox
+if is_macos; then
+  brew install --cask devtoys
+else
+  flatpak install -y --user flathub me.iepure.devtoolbox
+fi
