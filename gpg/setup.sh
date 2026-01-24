@@ -3,7 +3,11 @@
 if gpg --list-secret-keys | grep -q "sec"; then
   log 'GPG key already generated. Skipping...'
 else
-  sudo apt install -y gpg
+  if is_linux; then
+    sudo apt install -y gpg
+  elif is_macos; then
+    brew install gnupg
+  fi
   log 'Generating a new GPG key...'
   log
 
