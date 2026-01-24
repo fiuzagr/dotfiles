@@ -28,6 +28,12 @@ exec 1>>"$LOG_FILE" 2>&1
 
 . "$DOTFILES_PATH/helpers.sh"
 
+# Export OS and shell detection
+DOTFILES_OS=$(get_os)
+export DOTFILES_OS
+DOTFILES_SHELL=$(get_shell)
+export DOTFILES_SHELL
+
 echo "$(hr)"
 echo "Setup started at: $(date)"
 echo "User: $(whoami)"
@@ -42,13 +48,17 @@ log "$(hr)"
 
 if [ $# -eq 0 ]; then
   # (re)create .dotfilesrc in full setup
-  echo "#!/usr/bin/env bash" > "$HOME/.dotfilesrc"
+  echo "#!/usr/bin/env sh" > "$HOME/.dotfilesrc"
   to_dotfilesrc "export DOTFILES_PATH=\"$DOTFILES_PATH\""
   to_dotfilesrc "export DOTFILESRC_PATH=\"$DOTFILESRC_PATH\""
   to_dotfilesrc "alias dotfiles='sh \$DOTFILES_PATH/setup.sh'"
 
   # the order here matters!
-  modules="base local fonts ssh gpg cargo flatpak homebrew git vim terminal-tools podman node uv alacritty devtoolbox"
+  if is_macos; then
+    modules="base local fonts ssh gpg cargo homebrew git vim shell terminal-tools podman node uv alacritty devtoolbox"
+  else
+    modules="base local fonts ssh gpg cargo flatpak homebrew git vim shell terminal-tools podman node uv alacritty devtoolbox"
+  fi
 
   log
   log "$(hr)"
@@ -88,7 +98,7 @@ for module in $modules; do
 done
 IFS=$save_IFS
 
-to_bashrc ". \"$DOTFILESRC_PATH\""
+to_shell_rc ". \"$DOTFILESRC_PATH\""
 
 log
 log "$(hr)"
