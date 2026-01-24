@@ -1,20 +1,30 @@
 #!/usr/bin/env bash
 
-eval "$(starship init bash)"
+shell_type=$(get_shell)
+
+eval "$(starship init "$shell_type")"
 
 . "$HOME/.atuin/bin/env"
-[[ -f "$HOME/.bash-preexec.sh" ]] && . "$HOME/.bash-preexec.sh"
-eval "$(atuin init bash)"
+if [ "$shell_type" = "bash" ]; then
+  [[ -f "$HOME/.bash-preexec.sh" ]] && . "$HOME/.bash-preexec.sh"
+fi
+eval "$(atuin init "$shell_type")"
 
 export CARAPACE_BRIDGES="zsh,fish,bash,inshellisense"
 # shellcheck disable=SC1090
-. <(carapace _carapace)
+case "$shell_type" in
+  bash) . <(carapace _carapace) ;;
+  zsh)  source <(carapace _carapace zsh) ;;
+esac
 
-eval "$(direnv hook bash)"
+eval "$(direnv hook "$shell_type")"
 
-eval "$(fzf --bash)"
+case "$shell_type" in
+  bash) eval "$(fzf --bash)" ;;
+  zsh)  source <(fzf --zsh) ;;
+esac
 
 #PATH="$(brew --prefix uutils-coreutils)/libexec/uubin:$PATH"
 #export PATH
 
-eval "$(zoxide init bash)"
+eval "$(zoxide init "$shell_type")"
