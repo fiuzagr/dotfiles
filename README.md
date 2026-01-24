@@ -1,8 +1,26 @@
 # ~/.dotfiles
 
-Set up a fresh installation of **GNOME Debian-based** systems.
+Set up a fresh installation of **GNOME Debian-based Linux** and **macOS** systems.
 
-> NOTE: Only `bash` is supported as a shell
+> NOTE: Supports `bash` (Linux) and `zsh` (macOS) shells
+
+## Platform Support
+
+| Module | Linux | macOS | Notes |
+|--------|-------|-------|-------|
+| base | ✓ | ✓ | apt vs Xcode CLI tools |
+| homebrew | ✓ | ✓ | Different paths |
+| shell | ✓ | ✓ | bash vs zsh |
+| terminal-tools | ✓ | ✓ | Shell-specific init |
+| fonts | ✓ | ✓ | Different directories |
+| ssh | ✓ | ✓ | xclip vs pbcopy |
+| gpg | ✓ | ✓ | apt vs brew |
+| alacritty | ✓ | ✓ | cargo vs cask |
+| podman | ✓ | ✓ | Podman vs OrbStack |
+| flatpak | ✓ | ✗ | Linux only |
+| devtoolbox | ✓ | ✓ | DevToolbox vs DevToys |
+| node | ✓ | ✓ | NVM on both |
+| uv | ✓ | ✓ | Shell-specific completion |
 
 ## Installation
 
@@ -13,6 +31,18 @@ git clone https://github.com/fiuzagr/dotfiles.git ~/.dotfiles
 ```
 
 ### 2. run setup.sh script
+
+#### Linux (Debian-based)
+
+```shell
+sh ~/.dotfiles/setup.sh
+```
+
+#### macOS
+
+```shell
+sh ~/.dotfiles/setup.sh
+```
 
 > TIP: This is an idempotent tool. You can run it multiple times without any
 > issues.

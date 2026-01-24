@@ -34,3 +34,22 @@ modular setup scripts and shell utilities for system configuration.
 - Each module has its own directory with a `setup.sh` script
 - Helper functions are in `helpers.sh` for reusability
 - Configuration files use appropriate extensions (.toml, .gitconfig, etc.)
+
+## Helper Functions
+
+### OS Detection
+- `get_os()`: Returns "darwin" on macOS, "linux" on Linux
+- `is_macos()`: Returns 0 (success) on macOS, 1 otherwise
+- `is_linux()`: Returns 0 (success) on Linux, 1 otherwise
+
+### Shell Detection
+- `get_shell()`: Returns "zsh", "bash", or "bash" (fallback)
+- `to_zshrc()`: Append line to ~/.zshrc (analogous to to_bashrc)
+- `to_shell_rc()`: Dispatcher that calls appropriate RC function based on detected shell
+
+## macOS-Specific Notes
+
+- **Homebrew paths**: `/opt/homebrew` (Apple Silicon) or `/usr/local` (Intel)
+- **Font directory**: `~/Library/Fonts`
+- **Clipboard**: `pbcopy` instead of `xclip`
+- **Package manager**: `brew` instead of `apt`
