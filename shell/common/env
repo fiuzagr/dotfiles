@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+# Shared environment settings for all shells
+# Currently reserved for future cross-shell configuration

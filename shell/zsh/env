@@ -1,0 +1,4 @@
+#!/usr/bin/env zsh
+
+# Zsh-specific environment settings
+# Currently reserved for future zsh-only configuration
