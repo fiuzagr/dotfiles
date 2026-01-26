@@ -1,10 +1,6 @@
 #!/usr/bin/env sh
 
-if is_macos; then
-  brew install --cask alacritty
-else
-  cargo install alacritty
-fi
+brew install --cask alacritty
 
 if command -v update-alternatives >/dev/null 2>&1; then
   if ! update-alternatives --query x-terminal-emulator | grep -q "$(which alacritty)"; then

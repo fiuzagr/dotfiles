@@ -18,6 +18,6 @@ if ! command -v brew >/dev/null 2>&1; then
   NONINTERACTIVE=1 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
-eval "$($BREW_PREFIX/bin/brew shellenv)"
+eval "$("$BREW_PREFIX"/bin/brew shellenv)"
 
-to_dotfilesrc '. "$DOTFILES_PATH/homebrew/env"'
+to_dotfilesrc ". \"\$DOTFILES_PATH/homebrew/env\""

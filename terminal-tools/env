@@ -1,30 +1,24 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
-shell_type=$(get_shell)
+eval "$(starship init "$DOTFILES_SHELL")"
 
-eval "$(starship init "$shell_type")"
-
-. "$HOME/.atuin/bin/env"
-if [ "$shell_type" = "bash" ]; then
-  [[ -f "$HOME/.bash-preexec.sh" ]] && . "$HOME/.bash-preexec.sh"
-fi
-eval "$(atuin init "$shell_type")"
+eval "$(atuin init "$DOTFILES_SHELL")"
 
 export CARAPACE_BRIDGES="zsh,fish,bash,inshellisense"
 # shellcheck disable=SC1090
-case "$shell_type" in
-  bash) . <(carapace _carapace) ;;
-  zsh)  source <(carapace _carapace zsh) ;;
+case "$DOTFILES_SHELL" in
+bash) eval "$(carapace _carapace)" ;;
+zsh) eval "$(carapace _carapace zsh)" ;;
 esac
 
-eval "$(direnv hook "$shell_type")"
+eval "$(direnv hook "$DOTFILES_SHELL")"
 
-case "$shell_type" in
-  bash) eval "$(fzf --bash)" ;;
-  zsh)  source <(fzf --zsh) ;;
+case "$DOTFILES_SHELL" in
+bash) eval "$(fzf --bash)" ;;
+zsh) eval "$(fzf --zsh)" ;;
 esac
 
 #PATH="$(brew --prefix uutils-coreutils)/libexec/uubin:$PATH"
 #export PATH
 
-eval "$(zoxide init "$shell_type")"
+eval "$(zoxide init "$DOTFILES_SHELL")"

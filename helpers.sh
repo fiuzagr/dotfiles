@@ -7,6 +7,14 @@ log() {
   return
 }
 
+copy_to_clipboard() {
+  if is_macos; then
+    pbcopy
+  else
+    xclip -selection clipboard
+  fi
+}
+
 # Append a line to .bashrc if it doesn't already exist
 # $1 - file to test and append
 # $2 - regex test OR line to append
@@ -29,11 +37,11 @@ to_file() {
   fi
 
   if ! grep -q "$tf_test_or_line" "$tf_file"; then
-    echo '' >> "$tf_file"
+    echo '' >>"$tf_file"
     if [ -n "$tf_line_if_test" ]; then
-      echo "$tf_line_if_test" >> "$tf_file"
+      echo "$tf_line_if_test" >>"$tf_file"
     else
-      echo "$tf_test_or_line" >> "$tf_file"
+      echo "$tf_test_or_line" >>"$tf_file"
     fi
   fi
 
@@ -70,15 +78,15 @@ to_bashrc() {
 get_os() {
   go_uname=$(uname -s)
   case "$go_uname" in
-    Darwin*)
-      echo "darwin"
-      ;;
-    Linux*)
-      echo "linux"
-      ;;
-    *)
-      echo "unknown"
-      ;;
+  Darwin*)
+    echo "darwin"
+    ;;
+  Linux*)
+    echo "linux"
+    ;;
+  *)
+    echo "unknown"
+    ;;
   esac
   return
 }
@@ -113,15 +121,15 @@ is_linux() {
 get_shell() {
   gs_shell="$SHELL"
   case "$gs_shell" in
-    *zsh)
-      echo "zsh"
-      ;;
-    *bash)
-      echo "bash"
-      ;;
-    *)
-      echo "bash"
-      ;;
+  *zsh)
+    echo "zsh"
+    ;;
+  *bash)
+    echo "bash"
+    ;;
+  *)
+    echo "bash"
+    ;;
   esac
   return
 }
@@ -175,11 +183,17 @@ create_symlink() {
 
   if [ ! -L "$cs_dst" ] && [ -e "$cs_dst" ]; then
     BACKUP_PATH="${cs_dst}_backup_$(date +%Y%m%d_%H%M%S)"
-    mv "$cs_dst" "$BACKUP_PATH" || { echo "Failed to create backup of '$cs_dst'" >&2; exit 1; }
+    mv "$cs_dst" "$BACKUP_PATH" || {
+      echo "Failed to create backup of '$cs_dst'" >&2
+      exit 1
+    }
     log "Existing file/directory '$cs_dst' backed up to '$BACKUP_PATH'"
   fi
 
-  ln -sf "$cs_src" "$cs_dst" || { echo "Failed to create symbolic link from '$cs_src' to '$cs_dst'" >&2; exit 1; }
+  ln -sf "$cs_src" "$cs_dst" || {
+    echo "Failed to create symbolic link from '$cs_src' to '$cs_dst'" >&2
+    exit 1
+  }
   log "Created symbolic link from '$cs_src' to '$cs_dst'"
 
   return

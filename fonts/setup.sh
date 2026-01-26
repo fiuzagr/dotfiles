@@ -8,11 +8,15 @@ fi
 
 mkdir -p "$FONTS_DIR"
 
-wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/FiraCode.zip -O /tmp/FiraCode.zip
-wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/JetBrainsMono.zip -O /tmp/JetBrainsMono.zip
+if [ ! -d "$FONTS_DIR/FiraCode" ]; then
+  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/FiraCode.zip -O /tmp/FiraCode.zip
+  unzip -o /tmp/FiraCode.zip -d "$FONTS_DIR/FiraCode/"
+fi
 
-unzip -o /tmp/FiraCode.zip -d "$FONTS_DIR/FiraCode/"
-unzip -o /tmp/JetBrainsMono.zip -d "$FONTS_DIR/JetBrainsMono/"
+if [ ! -d "$FONTS_DIR/JetBrainsMono" ]; then
+  wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/JetBrainsMono.zip -O /tmp/JetBrainsMono.zip
+  unzip -o /tmp/JetBrainsMono.zip -d "$FONTS_DIR/JetBrainsMono/"
+fi
 
 if is_linux; then
   fc-cache -fv

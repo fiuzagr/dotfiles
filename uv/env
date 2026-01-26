@@ -1,5 +1,4 @@
 #!/usr/bin/env sh
 
-shell_type=$(get_shell)
-eval "$(uv generate-shell-completion $shell_type)"
-eval "$(uvx --generate-shell-completion $shell_type)"
+eval "$(uv generate-shell-completion "$DOTFILES_SHELL")"
+eval "$(uvx --generate-shell-completion "$DOTFILES_SHELL")"

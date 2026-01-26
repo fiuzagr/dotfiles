@@ -1,13 +1,5 @@
 #!/usr/bin/env sh
 
-copy_to_clipboard() {
-  if is_macos; then
-    pbcopy
-  else
-    xclip -selection clipboard
-  fi
-}
-
 if [ -f "$HOME/.ssh/id_rsa" ]; then
   if is_macos; then
     copy_cmd="< ~/.ssh/id_rsa.pub tee /dev/tty | pbcopy"
@@ -21,7 +13,7 @@ if [ -f "$HOME/.ssh/id_rsa" ]; then
   log "--------------------------------------------------------------------"
 else
   ssh-keygen -t rsa -b 4096 -N "" -f "$HOME/.ssh/id_rsa"
-  < "$HOME/.ssh/id_rsa.pub" tee /dev/tty | copy_to_clipboard
+  <"$HOME/.ssh/id_rsa.pub" tee /dev/tty | copy_to_clipboard
 
   if is_macos; then
     copy_cmd="< ~/.ssh/id_rsa.pub tee /dev/tty | pbcopy"

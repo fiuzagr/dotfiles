@@ -1,44 +1,31 @@
 # ~/.dotfiles
 
-Set up a fresh installation of **GNOME Debian-based Linux** and **macOS** systems.
+<!--toc:start-->
 
-> NOTE: Supports `bash` (Linux) and `zsh` (macOS) shells
+- [~/.dotfiles](#dotfiles)
+  - [Installation](#installation)
+    - [1. Clone this repository](#1-clone-this-repository)
+    - [2. Run setup.sh script](#2-run-setupsh-script)
+  - [Full setup features](#full-setup-features)
+    - [Package managers](#package-managers)
+    - [Terminal tools](#terminal-tools)
+    - [And more](#and-more)
+  - [Additional modules](#additional-modules)
+  <!--toc:end-->
 
-## Platform Support
+Set up a fresh installation of **GNOME Debian-based Linux** or **macOS** systems.
 
-| Module | Linux | macOS | Notes |
-|--------|-------|-------|-------|
-| base | ✓ | ✓ | apt vs Xcode CLI tools |
-| homebrew | ✓ | ✓ | Different paths |
-| shell | ✓ | ✓ | bash vs zsh |
-| terminal-tools | ✓ | ✓ | Shell-specific init |
-| fonts | ✓ | ✓ | Different directories |
-| ssh | ✓ | ✓ | xclip vs pbcopy |
-| gpg | ✓ | ✓ | apt vs brew |
-| alacritty | ✓ | ✓ | cargo vs cask |
-| podman | ✓ | ✓ | Podman vs OrbStack |
-| flatpak | ✓ | ✗ | Linux only |
-| devtoolbox | ✓ | ✓ | DevToolbox vs DevToys |
-| node | ✓ | ✓ | NVM on both |
-| uv | ✓ | ✓ | Shell-specific completion |
+> NOTE: Supports `bash` and `zsh` shells
 
 ## Installation
 
-### 1. clone this repository
+### 1. Clone this repository
 
 ```shell
 git clone https://github.com/fiuzagr/dotfiles.git ~/.dotfiles
 ```
 
-### 2. run setup.sh script
-
-#### Linux (Debian-based)
-
-```shell
-sh ~/.dotfiles/setup.sh
-```
-
-#### macOS
+### 2. Run setup.sh script
 
 ```shell
 sh ~/.dotfiles/setup.sh
@@ -63,14 +50,10 @@ This creates an alias `dotfiles` to run `setup.sh`.
 ### Package managers
 
 - Homebrew (preferred)
-- Cargo (used to install Alacritty)
-- Flatpak (used to install Dev Toolbox)
-- NVM (used to install Node.js and NPM)
-- UV (phyton package manager)
-
-### Terminals
-
-- Alacritty as default terminal
+- Cargo
+- Flatpak
+- NPM, Bun & Deno
+- UV
 
 ### Terminal tools
 
@@ -81,9 +64,9 @@ This creates an alias `dotfiles` to run `setup.sh`.
 
 ### And more
 
-- Podman from Homebrew as a Docker replacement
-- Vim from Homebrew
-- Git from Homebrew
+- Docker Desktop
+- NeoVim
+- Alacritty Terminal
 - ...
 
 ## Additional modules
@@ -91,10 +74,9 @@ This creates an alias `dotfiles` to run `setup.sh`.
 Install the following modules with `dotfiles <module1> <module2> ...` after a
 full setup
 
-- [devtoolbox](https://flathub.org/en/apps/me.iepure.devtoolbox)
-- [opencode](https://opencode.ai/)
-- jetbrains IDE (Webstorm only for now)
+- [devtoys](https://devtoys.app)
+- [opencode](https://opencode.ai/) (With [OmO](https://github.com/code-yeongyu/oh-my-opencode))
 
 ---
 
-> Chupinhado from https://github.com/luanfrv0/dotfiles
+> Chupinhado from <https://github.com/luanfrv0/dotfiles>
