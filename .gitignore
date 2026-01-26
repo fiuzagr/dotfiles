@@ -1,3 +1,5 @@
+.sisyphus/
+
 *.env*
 *.log
 *.tmp

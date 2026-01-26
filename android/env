@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 ANDROID_HOME="$(brew --prefix)/share/android-commandlinetools"
 
