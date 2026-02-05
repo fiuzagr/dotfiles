@@ -1,0 +1,117 @@
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
+  "sisyphus_agent": {
+    "disabled": false,
+    "planner_enabled": true,
+    "default_builder_enabled": true, // opencode builder
+    "replace_plan": false, // replace opencode planner with OmO planner
+  },
+  "git_master": {
+    "commit_footer": false,
+    "include_co_authored_by": false,
+  },
+  "agents": {
+    // opencode planner agent
+    "plan": {
+      // "model": "openrouter/z-ai/glm-4.7",
+      "model": "openrouter/moonshotai/kimi-k2.5",
+    },
+    // ???
+    "build": {
+      "model": "openrouter/x-ai/grok-code-fast-1",
+    },
+    // default orchestrator agent
+    "sisyphus": {
+      // "model": "openrouter/anthropic/claude-opus-4.5",
+      // "model": "openrouter/z-ai/glm-4.7",
+      "model": "openrouter/moonshotai/kimi-k2.5",
+    },
+    // executor agent
+    "sisyphus-junior": {
+      // "model": "openrouter/anthropic/claude-sonnet-4.5",
+      "model": "openrouter/x-ai/grok-code-fast-1",
+    },
+    // opencode builder agent
+    "OpenCode-Builder": {
+      "model": "openrouter/x-ai/grok-code-fast-1",
+    },
+    // orchestrator plan agent
+    "prometheus": {
+      // "model": "openrouter/anthropic/claude-opus-4.5",
+      // "model": "openrouter/z-ai/glm-4.7",
+      "model": "openrouter/moonshotai/kimi-k2.5",
+    },
+    // pre planner agent
+    "metis": {
+      // "model": "openrouter/anthropic/claude-sonnet-4.5",
+      // "model": "openrouter/z-ai/glm-4.7",
+      "model": "openrouter/moonshotai/kimi-k2.5",
+    },
+    // planner reviewer agent
+    "momus": {
+      // "model": "openrouter/anthropic/claude-sonnet-4.5",
+      // "model": "openrouter/z-ai/glm-4.7",
+      "model": "openrouter/moonshotai/kimi-k2.5",
+    },
+    // architecture agent
+    "oracle": {
+      // "model": "openrouter/openai/gpt-5.2",
+      // "model": "openrouter/z-ai/glm-4.7",
+      "model": "openrouter/moonshotai/kimi-k2.5",
+    },
+    // multi-repo analyzer agent (deep codebase undestanding)
+    "librarian": {
+      // "model": "opencode/big-pickle",
+      "model": "openrouter/z-ai/glm-4.7",
+    },
+    // fast codebase exploration agent
+    "explore": {
+      "model": "openrouter/openai/gpt-5-nano",
+      // "model": "openrouter/x-ai/grok-code-fast-1",
+    },
+    // visual content specialist agent (PDF, images, diagrams)
+    "multimodal-looker": {
+      // "model": "openrouter/google/gemini-3-flash-preview",
+      "model": "openrouter/moonshotai/kimi-k2.5",
+    },
+    // orchestrator executor agent
+    "atlas": {
+      // "model": "openrouter/anthropic/claude-sonnet-4.5",
+      // "model": "openrouter/x-ai/grok-code-fast-1",
+      // "model": "openrouter/z-ai/glm-4.7",
+      "model": "openrouter/moonshotai/kimi-k2.5",
+    },
+  },
+  "categories": {
+    "visual-engineering": {
+      // "model": "openrouter/google/gemini-3-pro-preview",
+      "model": "openrouter/moonshotai/kimi-k2.5",
+    },
+    "ultrabrain": {
+      // "model": "openrouter/openai/gpt-5.2-codex",
+      // "model": "openrouter/z-ai/glm-4.7",
+      "model": "openrouter/moonshotai/kimi-k2.5",
+    },
+    "artistry": {
+      // "model": "openrouter/google/gemini-3-pro-preview",
+      "model": "openrouter/moonshotai/kimi-k2.5",
+    },
+    "quick": {
+      // "model": "openrouter/anthropic/claude-haiku-4.5",
+      "model": "openrouter/z-ai/glm-4.7",
+    },
+    "unspecified-low": {
+      // "model": "openrouter/anthropic/claude-sonnet-4.5",
+      "model": "openrouter/z-ai/glm-4.7",
+    },
+    "unspecified-high": {
+      // "model": "openrouter/anthropic/claude-opus-4.5",
+      // "model": "openrouter/z-ai/glm-4.7",
+      "model": "openrouter/moonshotai/kimi-k2.5",
+    },
+    "writing": {
+      // "model": "openrouter/google/gemini-3-flash-preview",
+      "model": "openrouter/z-ai/glm-4.7-flash",
+    },
+  },
+}

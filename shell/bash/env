@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+# Bash-specific environment settings
+# Currently reserved for future bash-only configuration

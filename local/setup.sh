@@ -7,4 +7,4 @@ mkdir -p "$HOME/.local/var"
 
 link_tree "$DOTFILES_PATH/local/bin" "$HOME/.local/bin"
 
-to_dotfilesrc '. "$DOTFILES_PATH/local/env"'
+to_dotfilesrc ". \"\$DOTFILES_PATH/local/env\""

@@ -1,10 +1,12 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 ANDROID_HOME="$(brew --prefix)/share/android-commandlinetools"
+ANDROID_USER_HOME="$HOME/.android"
 
-PATH="$ANDROID_HOME/cmdline-tools/tools/bin/:$PATH"
-PATH="$ANDROID_HOME/emulator/:$PATH"
-PATH="$ANDROID_HOME/platform-tools/:$PATH"
+PATH="$ANDROID_HOME/cmdline-tools/tools/bin:$PATH"
+PATH="$ANDROID_HOME/emulator:$PATH"
+PATH="$ANDROID_HOME/platform-tools:$PATH"
 
+export ANDROID_USER_HOME
 export ANDROID_HOME
 export PATH

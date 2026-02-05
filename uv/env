@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
-eval "$(uv generate-shell-completion bash)"
-eval "$(uvx --generate-shell-completion bash)"
+eval "$(uv generate-shell-completion "$DOTFILES_SHELL")"
+eval "$(uvx --generate-shell-completion "$DOTFILES_SHELL")"

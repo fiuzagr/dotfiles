@@ -1,18 +1,35 @@
 # ~/.dotfiles
 
-Set up a fresh installation of **GNOME Debian-based** systems.
+<!--toc:start-->
 
-> NOTE: Only `bash` is supported as a shell
+- [~/.dotfiles](#dotfiles)
+  - [Installation](#installation)
+    - [1. Clone this repository](#1-clone-this-repository)
+    - [2. Run setup.sh script](#2-run-setupsh-script)
+  - [Full setup features](#full-setup-features)
+    - [Package managers](#package-managers)
+    - [Terminal tools](#terminal-tools)
+    - [And more](#and-more)
+  - [Additional modules](#additional-modules)
+  <!--toc:end-->
+
+Set up a fresh installation of **GNOME Debian-based Linux** or **macOS** systems.
+
+> NOTE: Supports `bash` and `zsh` shells
 
 ## Installation
 
-### 1. clone this repository
+### 1. Clone this repository
 
 ```shell
 git clone https://github.com/fiuzagr/dotfiles.git ~/.dotfiles
 ```
 
-### 2. run setup.sh script
+### 2. Run setup.sh script
+
+```shell
+sh ~/.dotfiles/setup.sh
+```
 
 > TIP: This is an idempotent tool. You can run it multiple times without any
 > issues.
@@ -33,14 +50,10 @@ This creates an alias `dotfiles` to run `setup.sh`.
 ### Package managers
 
 - Homebrew (preferred)
-- Cargo (used to install Alacritty)
-- Flatpak (used to install Dev Toolbox)
-- NVM (used to install Node.js and NPM)
-- UV (phyton package manager)
-
-### Terminals
-
-- Alacritty as default terminal
+- Cargo
+- Flatpak
+- NPM, Bun & Deno
+- UV
 
 ### Terminal tools
 
@@ -51,9 +64,9 @@ This creates an alias `dotfiles` to run `setup.sh`.
 
 ### And more
 
-- Podman from Homebrew as a Docker replacement
-- Vim from Homebrew
-- Git from Homebrew
+- Docker Desktop
+- NeoVim
+- Alacritty Terminal
 - ...
 
 ## Additional modules
@@ -61,10 +74,9 @@ This creates an alias `dotfiles` to run `setup.sh`.
 Install the following modules with `dotfiles <module1> <module2> ...` after a
 full setup
 
-- [devtoolbox](https://flathub.org/en/apps/me.iepure.devtoolbox)
-- [opencode](https://opencode.ai/)
-- jetbrains IDE (Webstorm only for now)
+- [devtoys](https://devtoys.app)
+- [opencode](https://opencode.ai/) (With [OmO](https://github.com/code-yeongyu/oh-my-opencode))
 
 ---
 
-> Chupinhado from https://github.com/luanfrv0/dotfiles
+> Chupinhado from <https://github.com/luanfrv0/dotfiles>

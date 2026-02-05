@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-cargo install alacritty
+brew install --cask alacritty
 
 if command -v update-alternatives >/dev/null 2>&1; then
   if ! update-alternatives --query x-terminal-emulator | grep -q "$(which alacritty)"; then

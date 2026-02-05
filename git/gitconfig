@@ -2,7 +2,7 @@
   defaultBranch = main
 
 [core]
-  editor = vim
+  editor = nvim
 
 [push]
   default = simple
@@ -28,6 +28,8 @@
   recovery-deleted = !sh -c 'git checkout $(git find-deleted -- "$1")^ -- "$1"' -
   tree = log --pretty=format:'%Cgreen%h%Creset -%C(auto)%d%Creset %s %C(cyan)<author:%an | committer:%cn>%Creset' --graph --color --all --decorate
   remove-merged = "!sh -c 'IFS=\"|\"; git branch --merged | grep -vE \"\\*|main|master\" | grep -vE \"${*:-#}\" | xargs -n 1 git branch -d' -"
+  list-gone = "!sh -c \"git fetch --prune; git branch -vv | grep ': gone]' | grep -vE '\\*|\\+|main|master' | grep -vE '${*:-#}' | awk '{print \\$1}'\" -"
+  remove-gone = "!sh -c \"git fetch --prune; git branch -vv | grep ': gone]' | grep -vE '\\*|\\+|main|master' | grep -vE '${*:-#}' | awk '{print \\$1}' | xargs -n 1 git branch -D\" -"
 
 [credentials]
   helper = cache --timeout=3600
