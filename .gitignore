@@ -1,5 +1,6 @@
 .sisyphus/
 
+*backup*
 *.env*
 *.log
 *.tmp

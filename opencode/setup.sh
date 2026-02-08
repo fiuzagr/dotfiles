@@ -6,6 +6,7 @@ brew install anomalyco/tap/opencode
 if is_macos; then
   brew tap nguyenphutrong/tap
   brew install --cask quotio
+  xattr -cr /Applications/Quotio.app
 elif is_linux; then
   brew install cliproxyapi
   brew services start cliproxyapi
