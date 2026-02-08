@@ -7,6 +7,16 @@ log() {
   return
 }
 
+log_error() {
+  log
+  log "$(hr)"
+  log "$(fgc red)$(e x) Error: $1 $(fgc end)"
+  if [ "$2" != "" ]; then
+    log "See $2 for details."
+  fi
+  log "$(hr)"
+}
+
 copy_to_clipboard() {
   if is_macos; then
     pbcopy

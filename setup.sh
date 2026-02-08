@@ -66,7 +66,7 @@ if [ $# -eq 0 ]; then
   log
 else
   if [ ! -f "$DOTFILESRC_PATH" ]; then
-    log "Error: Please run full setup first (without parameters)"
+    log_error "Please run full setup first (without parameters)"
     exit 1
   fi
 
@@ -81,19 +81,24 @@ for module in $modules; do
   log "Performing '$module' module setup..."
 
   if [ ! -f "$DOTFILES_PATH/$module/setup.sh" ]; then
-    log "Error: Module '$module' does not exist."
+    log_error "Module '$module' does not exist."
     exit 1
   fi
 
-  # FIXME this subshell error handling is not working as expected
-  {
-    # shellcheck disable=SC1090
+  # Execute module in subshell to isolate error handling from set -e
+  set +e
+  # shellcheck disable=SC1090
+  (
+    set -e
     . "$DOTFILES_PATH/$module/setup.sh"
-  } || {
-    log "Error: Module '$module' setup failed."
-    log "See $LOG_FILE for details."
+  )
+  MODULE_EXIT_CODE=$?
+  set -e
+
+  if [ $MODULE_EXIT_CODE -ne 0 ]; then
+    log_error "Module '$module' setup failed." "$LOG_FILE"
     exit 1
-  }
+  fi
 done
 IFS=$save_IFS
 
