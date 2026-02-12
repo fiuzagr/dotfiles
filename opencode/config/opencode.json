@@ -27,6 +27,14 @@
     }
   },
   "plugin": [],
+  "agent": {
+    "build": {
+      "model": "quotio/claude-haiku-4.5",
+    },
+    "plan": {
+      "model": "quotio/claude-opus-4.5",
+    }
+  },
   "provider": {
     "quotio": {
       "models": {
@@ -46,54 +54,6 @@
             ]
           },
           "name": "Claude Haiku 4.5"
-        },
-        "claude-opus-4-5-thinking": {
-          "attachment": true,
-          "limit": {
-            "context": 200000,
-            "output": 64000
-          },
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          },
-          "name": "Claude Opus 4 5 Thinking",
-          "options": {
-            "thinking": {
-              "budgetTokens": 10000,
-              "type": "enabled"
-            }
-          },
-          "reasoning": true
-        },
-        "claude-opus-4-6-thinking": {
-          "attachment": true,
-          "limit": {
-            "context": 200000,
-            "output": 64000
-          },
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          },
-          "name": "Claude Opus 4 6 Thinking",
-          "options": {
-            "thinking": {
-              "budgetTokens": 10000,
-              "type": "enabled"
-            }
-          },
-          "reasoning": true
         },
         "claude-opus-4.5": {
           "attachment": true,
@@ -145,47 +105,6 @@
             ]
           },
           "name": "Claude Sonnet 4"
-        },
-        "claude-sonnet-4-5": {
-          "attachment": true,
-          "limit": {
-            "context": 200000,
-            "output": 64000
-          },
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          },
-          "name": "Claude Sonnet 4 5"
-        },
-        "claude-sonnet-4-5-thinking": {
-          "attachment": true,
-          "limit": {
-            "context": 200000,
-            "output": 64000
-          },
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          },
-          "name": "Claude Sonnet 4 5 Thinking",
-          "options": {
-            "thinking": {
-              "budgetTokens": 10000,
-              "type": "enabled"
-            }
-          },
-          "reasoning": true
         },
         "claude-sonnet-4.5": {
           "attachment": true,
@@ -255,23 +174,6 @@
           },
           "name": "Gemini 2.5 Pro"
         },
-        "gemini-3-flash": {
-          "attachment": true,
-          "limit": {
-            "context": 1048576,
-            "output": 65536
-          },
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          },
-          "name": "Gemini 3 Flash"
-        },
         "gemini-3-flash-preview": {
           "attachment": true,
           "limit": {
@@ -288,40 +190,6 @@
             ]
           },
           "name": "Gemini 3 Flash Preview"
-        },
-        "gemini-3-pro-high": {
-          "attachment": true,
-          "limit": {
-            "context": 1048576,
-            "output": 65536
-          },
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          },
-          "name": "Gemini 3 Pro High"
-        },
-        "gemini-3-pro-image": {
-          "attachment": true,
-          "limit": {
-            "context": 1048576,
-            "output": 65536
-          },
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          },
-          "name": "Gemini 3 Pro Image"
         },
         "gemini-3-pro-preview": {
           "attachment": true,
@@ -564,23 +432,6 @@
           },
           "reasoning": true
         },
-        "gpt-oss-120b-medium": {
-          "attachment": true,
-          "limit": {
-            "context": 400000,
-            "output": 32768
-          },
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          },
-          "name": "Gpt Oss 120B Medium"
-        },
         "grok-code-fast-1": {
           "attachment": false,
           "limit": {
@@ -612,38 +463,6 @@
             ]
           },
           "name": "Oswe Vscode Prime"
-        },
-        "tab_flash_lite_preview": {
-          "attachment": false,
-          "limit": {
-            "context": 128000,
-            "output": 16384
-          },
-          "modalities": {
-            "input": [
-              "text"
-            ],
-            "output": [
-              "text"
-            ]
-          },
-          "name": "Tab_Flash_Lite_Preview"
-        },
-        "tab_jump_flash_lite_preview": {
-          "attachment": false,
-          "limit": {
-            "context": 128000,
-            "output": 16384
-          },
-          "modalities": {
-            "input": [
-              "text"
-            ],
-            "output": [
-              "text"
-            ]
-          },
-          "name": "Tab_Jump_Flash_Lite_Preview"
         }
       },
       "name": "Quotio",
