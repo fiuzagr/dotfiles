@@ -25,3 +25,5 @@ npx --yes @tech-leads-club/agent-skills install --global --copy --agent opencode
 npx --yes @tech-leads-club/agent-skills install --global --copy --agent opencode --skill skill-creator
 npx --yes @tech-leads-club/agent-skills install --global --copy --agent opencode --skill subagent-creator
 npx --yes @tech-leads-club/agent-skills install --global --copy --agent opencode --skill technical-design-doc-creator
+npx --yes @tech-leads-club/agent-skills install --global --copy --agent opencode --skill coding-guidelines
+npx --yes @tech-leads-club/agent-skills install --global --copy --agent opencode --skill docs-writer

@@ -1,7 +1,16 @@
-# Interaction
+# Agents Configuration
+
+## Interaction
 
 - **CRITICAL**: I speak Brazilian Portuguese and you must answer in my language.
   But ALL CODE and ALL DOCUMENTATION for this project must be generated in
   International English language only.
 - **IMPORTANT**: GENERATE ALL CODE, COMMENTS AND DOCUMENTATION IN ENGLISH. NEVER
   USE ANY OTHER LANGUAGE.
+
+## Rules
+
+- Use `question` tool every time you need to ask me something. Do not ask
+  questions in the chat, only use the tool.
+- Use the Mermaid syntax to generate diagrams inside documentation files. Do not
+  use any other syntax for diagrams. Do not generate diagrams in any other way.

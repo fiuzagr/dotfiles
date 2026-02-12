@@ -50,7 +50,15 @@ return {
                 "ListHeaderComponentClassName",
                 ".*ClassName",
               },
-              classFunctions = { "clsx", "cva", "cn", "tv", "tw", "twMerge" },
+              classFunctions = {
+                "clsx",
+                "cva",
+                "cn",
+                "tv",
+                "tw",
+                "twMerge",
+                "useResolveClassNames",
+              },
               experimental = {
                 classRegex = {
                   { "(`.*?`)", '(".*?")', "('.*?')" },

@@ -15,6 +15,15 @@
       "enabled": true,
       "type": "remote",
       "url": "http://127.0.0.1:3845/mcp"
+    },
+    "TANSTACK": {
+      "command": [
+        "npx",
+        "@tanstack/cli",
+        "mcp"
+      ],
+      "enabled": true,
+      "type": "local"
     }
   },
   "plugin": [],
@@ -62,6 +71,30 @@
           },
           "reasoning": true
         },
+        "claude-opus-4-6-thinking": {
+          "attachment": true,
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Claude Opus 4 6 Thinking",
+          "options": {
+            "thinking": {
+              "budgetTokens": 10000,
+              "type": "enabled"
+            }
+          },
+          "reasoning": true
+        },
         "claude-opus-4.5": {
           "attachment": true,
           "limit": {
@@ -78,6 +111,23 @@
             ]
           },
           "name": "Claude Opus 4.5"
+        },
+        "claude-opus-4.6": {
+          "attachment": true,
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Claude Opus 4.6"
         },
         "claude-sonnet-4": {
           "attachment": true,
@@ -136,6 +186,23 @@
             }
           },
           "reasoning": true
+        },
+        "claude-sonnet-4.5": {
+          "attachment": true,
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Claude Sonnet 4.5"
         },
         "gemini-2.5-flash": {
           "attachment": true,
@@ -529,6 +596,54 @@
             ]
           },
           "name": "Grok Code Fast 1"
+        },
+        "oswe-vscode-prime": {
+          "attachment": false,
+          "limit": {
+            "context": 128000,
+            "output": 16384
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Oswe Vscode Prime"
+        },
+        "tab_flash_lite_preview": {
+          "attachment": false,
+          "limit": {
+            "context": 128000,
+            "output": 16384
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Tab_Flash_Lite_Preview"
+        },
+        "tab_jump_flash_lite_preview": {
+          "attachment": false,
+          "limit": {
+            "context": 128000,
+            "output": 16384
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Tab_Jump_Flash_Lite_Preview"
         }
       },
       "name": "Quotio",
