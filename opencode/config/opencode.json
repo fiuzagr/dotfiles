@@ -1,5 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "default_agent": "plan",
   "mcp": {
     "DOCKER_MCP_TOOLKIT": {
       "command": [
@@ -29,10 +30,10 @@
   "plugin": [],
   "agent": {
     "build": {
-      "model": "quotio/claude-haiku-4.5",
+      "model": "openrouter/x-ai/grok-code-fast-1",
     },
     "plan": {
-      "model": "quotio/claude-opus-4.5",
+      "model": "openrouter/z-ai/glm-5",
     }
   },
   "provider": {
