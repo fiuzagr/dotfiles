@@ -1,176 +1,339 @@
-# AGENTS.md - Dotfiles Repository Guide
+# AGENTS.md - Agent Guide for Dotfiles
 
-## Project Overview
+This guide helps AI agents navigate and work effectively with the dotfiles codebase.
 
-This is a shell-based dotfiles repository for Debian and macOS systems. It uses
-modular setup scripts and shell utilities for system configuration.
+---
 
-## Build/Test Commands
+## Quick Reference
 
-- **Full setup**: `sh setup.sh` (installs all modules)
-- **Module setup**: `sh setup.sh <module1> <module2> ...` (installs specific
-  modules)
-- **Test script**: `sh test.sh` (basic helper function tests - validates OS/shell detection, file operations, and RC file appending)
-- **Run single test function**: Modify `test.sh` directly to isolate and run specific test sections (no command-line flags supported)
-- **Build/lint verification**: No dedicated lint command exists. Code quality maintained through:
-  - Manual review adherence to POSIX shell standards
-  - `.editorconfig` enforcement via editor integration
-  - `set -ae` strict error handling in scripts
-- **Type checking**: No type checker configured (pure shell scripts)
-- **Available modules**: shell, base, local, fonts, ssh, gpg, rustup, flatpak, homebrew,
-  git, nvim, terminal-tools, docker, node, uv, alacritty, devtoys, opencode
+### Build/Test Commands
 
-## Tooling Notes
+```bash
+# Full setup (installs all modules)
+sh setup.sh
 
-- **Package managers**: Relies on system package managers (apt/homebrew) rather than JS-based tooling
-- **Dependencies**: No external linting/formatting tools (ESLint, Prettier, ShellCheck)
-- **Testing**: Manual shell script execution only - no automated test runners
-- **CI/CD**: No CI pipeline configured in this dotfiles repository
+# Selective module setup
+sh setup.sh <module1> <module2> ...
 
-## Code Style Guidelines
+# Run tests
+sh test.sh
 
-### Shell Script Standards
+# Verify specific function
+# Edit test.sh to isolate individual test functions
+```
 
-- **Interpreter**: Use POSIX shell (`#!/usr/bin/env sh`) exclusively - no bash/zsh specific features
-- **Safety flags**: Always use `set -ae` (abort on error, auto-export variables)
-- **Exit codes**: Use `exit 0` for success, `exit 1` for failures
-- **Shell compatibility**: Code must work on both bash and zsh (no bashisms or zsh-specific syntax)
+### Available Modules
 
-### Formatting & Style
+**System Setup:** base, shell, local, fonts, homebrew
+**Development:** git, nvim, node, rustup, uv, docker
+**Terminal:** terminal-tools, tmux, alacritty
+**Optional:** opencode, devtoys, flatpak, android, gpg, ssh
 
-- **Indentation**: 2 spaces (enforced via .editorconfig)
-- **Line length**: 80 characters maximum
-- **End of line**: LF only, UTF-8 encoding
-- **Final newline**: Required at end of all files
-- **Trailing whitespace**: Automatically trimmed
-- **Braces**: Use consistent spacing: `if [ condition ]; then` (space after `[` and before `]`)
+---
 
-### Naming Conventions
+## Project Context Summary
 
-- **Functions**: Use lowercase with underscores: `get_os()`, `to_file()`, `create_symlink()`
-- **Variables**: Function-scoped variables prefixed with function name abbreviation (e.g., `tf_file` in `to_file()`)
-- **Constants**: Use UPPERCASE for exported variables (`DOTFILES_PATH`, `DOTFILES_OS`)
-- **Files**: Lowercase with hyphens: `setup.sh`, `helpers.sh`, not `Setup.sh` or `helpers_script.sh`
+**Type:** Cross-platform shell-based dotfiles for macOS & Linux
+**Tech:** POSIX sh (no bash/zsh features)
+**Purpose:** Reduce new machine setup from hours to minutes with idempotent scripts
+**Scope:** 20+ modules covering development tools, terminal config, and system setup
 
-### Error Handling & Logging
+**For complete project context, see:** `.specs/project/PROJECT.md`
 
-- **Error output**: Use `>&2` for all error messages (redirects to stderr)
-- **Logging**: Use `log` helper function for user-facing messages in setup scripts
-- **Process safety**: Check file/directory existence before operations
-- **Backup strategy**: Functions like `create_symlink()` automatically backup existing files
+---
 
-### Comments & Documentation
+## When to Load Spec Files
 
-- **Function documentation**: Include parameter descriptions and usage examples above each function
-- **Inline comments**: Explain complex logic or cross-platform differences
-- **Usage patterns**: Show both simple and advanced usage examples
-- **Parameter validation**: Document required vs optional parameters clearly
+The `.specs/` directory contains detailed specifications. Reference these files based on your task:
 
-### Code Organization
+### Planning & Understanding Project
 
-- **Function order**: Place helper functions before main logic
-- **Modular design**: One module per tool/feature, self-contained setup scripts
-- **Error propagation**: Setup scripts exit early on any module failure
-- **Resource management**: Clean up temporary files and restore environment variables
+| Task | Load File | When/Why |
+|------|-----------|----------|
+| **Understand project vision** | `.specs/project/PROJECT.md` | Project goals, scope, tech decisions, and constraints |
+| **Check current status** | `.specs/project/STATE.md` | Project progress, decisions made, known issues, blockers |
+| **See roadmap** | `.specs/project/ROADMAP.md` | Planned features, milestones, upcoming work |
 
-### Cross-Platform Patterns
+**When to load:** Before starting work, when understanding project direction, when evaluating scope of changes
 
-- **OS detection**: Use `get_os()` returning "darwin"/"linux" for platform-specific logic
-- **Shell detection**: Use `get_shell()` returning "zsh"/"bash" for shell-specific configuration
-- **Conditional execution**: Use `is_macos()` and `is_linux()` for platform guards
-- **Clipboard**: Platform-specific handling (pbcopy on macOS, xclip on Linux)
+---
 
-## File Structure
+### Implementation & Code Changes
 
-### Root Level
+| Task | Load File | When/Why |
+|------|-----------|----------|
+| **Check supported tech** | `.specs/codebase/STACK.md` | All tools/languages, versions, platform-specific details |
+| **Understand patterns** | `.specs/codebase/ARCHITECTURE.md` | Module patterns, data flow, orchestration, error handling, dependencies |
+| **Follow code style** | `.specs/codebase/CONVENTIONS.md` | Naming, formatting, POSIX compliance, comments, error handling patterns |
+| **Find file locations** | `.specs/codebase/STRUCTURE.md` | Directory tree, file organization, configuration locations, module layout |
+| **Integrate external services** | `.specs/codebase/INTEGRATIONS.md` | External APIs/services, configuration, auth methods, usage patterns |
+| **Modify/extend tests** | `.specs/codebase/TESTING.md` | Testing frameworks, current coverage, best practices, planned improvements |
 
-- `setup.sh`: Main orchestration script handling module execution, logging, and environment setup
-- `helpers.sh`: Core utility functions for OS/shell detection, file manipulation, and cross-platform operations
-- `test.sh`: Basic functional tests for helper functions and setup verification
-- `shml`: Terminal markup framework for colors, icons, progress bars, and UI elements
-- `AGENTS.md`: This guide for agents, build commands, and code style guidelines
-- `README.md`: User documentation with installation and module descriptions
-- `.editorconfig`: Code formatting rules enforced across all editors
-- `.gitignore`: Git ignore patterns for build artifacts, logs, and IDE files
+**When to load:**
+- **STACK.md** → When adding dependencies or checking tool versions
+- **ARCHITECTURE.md** → When modifying core scripts or adding new modules
+- **CONVENTIONS.md** → When writing any shell code (critical for consistency)
+- **STRUCTURE.md** → When creating new files or understanding file organization
+- **INTEGRATIONS.md** → When connecting to external services or tools
+- **TESTING.md** → When writing or modifying tests
 
-### Module Organization
+---
 
-- Each module has its own directory with a `setup.sh` script
-- Configuration files use appropriate extensions (.toml for configurations, .gitconfig for git, etc.)
-- Platform-specific logic embedded in setup scripts with OS/shell detection
-- Self-contained modules that can be installed independently
+## Essential Conventions (Summary)
 
-### Special Directories
+**Load full version from `.specs/codebase/CONVENTIONS.md` for complete details.**
 
-- `local/`: Custom user configurations and local binaries
-- `opencode/config/`: OpenCode agent configurations and Oh My OpenCode setup
-- `.sisyphus/`: Task management and work planning artifacts
-- `nvim/lazyvim/`: Neovim LazyVim distribution with Lua configurations
+### Critical Rules
 
-## External Rules & Agent Instructions
+**POSIX Compliance:**
+- Use only `#!/usr/bin/env sh` shebang
+- No bash/zsh-specific features
+- Use `[ ... ]` for conditionals, never `[[ ... ]]`
+- Use `$()` for command substitution, never backticks
+- No arrays, associative arrays, or substring expansion
 
-### Editor & IDE Rules
+**Safety & Error Handling:**
+- Always use `set -ae` (abort on error, auto-export)
+- Send errors to stderr with `>&2`
+- Use `exit 1` for failures, `exit 0` for success
+- Check file/directory existence before operations
 
-- **Cursor rules**: No .cursorrules or .cursor/rules/ directory found
-- **Copilot instructions**: No .github/copilot-instructions.md found
+**Naming Conventions:**
+- **Functions:** lowercase_with_underscores
+- **Exports:** UPPERCASE_WITH_UNDERSCORES
+- **Local variables:** lowercase_with_underscores, function-scoped
+- **Files:** lowercase-with-hyphens (setup.sh, helpers.sh)
 
-### Agent-Specific Guidelines
+**Code Style:**
+- Indentation: 2 spaces (enforced by .editorconfig)
+- Line length: 80 characters max
+- Final newline: Required in all files
+- Quote all variable expansions: `"$var"` not `$var`
 
-- **Code generation**: Maintain POSIX shell compatibility - avoid bash/zsh extensions
-- **File modifications**: Respect existing function patterns and naming conventions
-- **Error handling**: Use `>&2` for errors, `exit 1` for failures
-- **Testing**: Update test.sh when adding new helper functions
-- **Documentation**: Keep parameter documentation and usage examples current
+**Documentation:**
+- Document functions above definition with parameters and examples
+- Comment *why*, not *what*
+- Keep inline comments minimal
+- Reference external resources for complex logic
 
-## Helper Functions Reference
+---
 
-### OS Detection
+## Helper Functions Quick Reference
 
-- `get_os()`: Returns "darwin" on macOS, "linux" on Linux, "unknown" otherwise
-- `is_macos()`: Returns 0 (success) on macOS, 1 otherwise
-- `is_linux()`: Returns 0 (success) on Linux, 1 otherwise
+**Load full documentation from `.specs/codebase/ARCHITECTURE.md` for usage examples.**
 
-### Shell Detection & Configuration
+### OS/Shell Detection
 
-- `get_shell()`: Returns "zsh", "bash", or "bash" (fallback)
-- `to_zshrc()`: Append line to ~/.zshrc if it doesn't exist (with optional regex test)
-- `to_bashrc()`: Append line to ~/.bashrc if it doesn't exist (with optional regex test)
-- `to_shell_rc()`: Dispatcher that calls appropriate RC function based on detected shell
+```sh
+get_os()              # Returns "darwin" or "linux"
+is_macos()            # Returns 0 on macOS, 1 otherwise
+is_linux()            # Returns 0 on Linux, 1 otherwise
+get_shell()           # Returns "zsh" or "bash"
+```
 
 ### File Operations
 
-- `to_file()`: Append line to file if regex test doesn't match (core implementation)
-- `to_dotfilesrc()`: Append line to ~/.dotfilesrc if it doesn't exist
-- `create_symlink()`: Create symbolic link with automatic backup of existing files
-- `link_tree()`: Create directory tree and symlink all files from source to destination
+```sh
+to_file()             # Append line to file with regex test (core implementation)
+to_bashrc()           # Append to ~/.bashrc if not exists
+to_zshrc()            # Append to ~/.zshrc if not exists
+to_dotfilesrc()       # Append to ~/.dotfilesrc if not exists
+to_shell_rc()         # Platform-agnostic RC appender (calls bash/zsh)
+create_symlink()      # Create symlink with auto-backup of existing
+link_tree()           # Create tree of symlinks from source directory
+```
 
 ### Utilities
 
-- `copy_to_clipboard()`: Cross-platform clipboard handling (pbcopy on macOS, xclip on Linux)
-- `log()`: User-facing logging that outputs to both console and log file
-
-### Function Usage Patterns
-
-```bash
-# Simple append
-to_zshrc 'export PATH="$HOME/bin:$PATH"'
-
-# Conditional append (only if pattern doesn't exist)
-to_zshrc '\\.my_script' 'source $HOME/.my_script'
-
-# Cross-platform dispatch
-to_shell_rc 'export EDITOR=vim'
-
-# File linking with backup
-create_symlink "$DOTFILES_PATH/config" "$HOME/.config/myapp"
-
-# Directory tree linking
-link_tree "$DOTFILES_PATH/fonts" "$HOME/.fonts"
+```sh
+copy_to_clipboard()   # Cross-platform clipboard (pbcopy/xclip)
+log()                 # User-facing logging to console & log file
+log_error()           # Error logging with formatting
 ```
 
-## macOS-Specific Notes
+**Key patterns:**
+- All functions check prerequisites before executing
+- Idempotent design (safe to run multiple times)
+- Error messages to stderr with context
+- Local variables use function-specific prefixes (tf_, cs_, etc.)
 
-- **Homebrew paths**: `/opt/homebrew` (Apple Silicon) or `/usr/local` (Intel)
-- **Font directory**: `~/Library/Fonts`
-- **Clipboard**: `pbcopy` instead of `xclip`
-- **Package manager**: `brew` instead of `apt`
+---
+
+## Module Architecture
+
+**Load full details from `.specs/codebase/ARCHITECTURE.md`**
+
+### Module Structure
+
+Each module directory contains:
+- `setup.sh` - Installation and configuration script
+- `env` (optional) - Environment variables and tool initialization
+
+### Execution Pattern
+
+```sh
+# setup.sh runs in subshell with set -e
+# 1. Install packages (brew/apt)
+# 2. Create symlinks for configs
+# 3. Register module/env in ~/.dotfilesrc
+# 4. Source module/env if it exists
+```
+
+### Key Principles
+
+- **Modular:** Each module is self-contained and order-independent (except noted dependencies)
+- **Idempotent:** Can run multiple times without issues
+- **Cross-platform:** Conditional logic for macOS vs Linux
+- **Environment isolation:** Each module exports its own variables
+
+### Module Dependencies
+
+**Critical order (must run first):**
+```
+base → shell → local → fonts → homebrew → [others]
+```
+
+**Load detailed dependency graph from `.specs/codebase/ARCHITECTURE.md`**
+
+---
+
+## Code Quality Standards
+
+### Before Committing
+
+1. **Test your changes:**
+   ```bash
+   sh test.sh
+   ```
+
+2. **Check POSIX compliance:**
+   - No bashisms or zsh-specific syntax
+   - All variables quoted
+   - Use `[ ... ]` not `[[ ... ]]`
+
+3. **Follow conventions:**
+   - Reference `.specs/codebase/CONVENTIONS.md`
+   - 2-space indentation
+   - 80-character line limit
+   - Function documentation above definition
+
+4. **Run helpers.sh tests:**
+   ```bash
+   sh test.sh
+   ```
+
+### Error Handling Checklist
+
+- [ ] All error messages sent to stderr (`>&2`)
+- [ ] Functions return proper exit codes (0 for success, 1 for error)
+- [ ] File/directory existence checked before operations
+- [ ] Idempotent behavior verified (run twice, same result)
+- [ ] Temporary files cleaned up properly
+
+---
+
+## Workflow: Adding a New Module
+
+1. **Reference architecture:** Load `.specs/codebase/ARCHITECTURE.md` for patterns
+2. **Follow conventions:** Review `.specs/codebase/CONVENTIONS.md` for code style
+3. **Create structure:** `mkdir [module] && touch [module]/setup.sh`
+4. **Implement setup:** Follow module pattern from ARCHITECTURE.md
+5. **Test thoroughly:** Add test cases to test.sh
+6. **Document:** Add function documentation and comments
+7. **Update:** Add module to setup.sh module list in correct order
+
+**Reference:** `.specs/codebase/STRUCTURE.md` for directory organization
+
+---
+
+## Workflow: Fixing a Bug
+
+1. **Understand scope:** Check `.specs/project/STATE.md` for known issues
+2. **Analyze code:** Review `.specs/codebase/ARCHITECTURE.md` for pattern context
+3. **Locate function:** Check `.specs/codebase/STRUCTURE.md` for file locations
+4. **Check tests:** See `.specs/codebase/TESTING.md` for test patterns
+5. **Implement fix:** Follow error handling from CONVENTIONS.md
+6. **Add tests:** Extend test.sh with regression test
+7. **Verify:** Run `sh test.sh` and verify idempotency
+
+---
+
+## Workflow: Adding Features
+
+1. **Check roadmap:** `.specs/project/ROADMAP.md` for planned features
+2. **Verify scope:** Ensure it fits project vision in PROJECT.md
+3. **Plan implementation:** Reference ARCHITECTURE.md and STRUCTURE.md
+4. **Code carefully:** Follow all CONVENTIONS.md rules
+5. **Test extensively:** Add tests in test.sh
+6. **Update docs:** Reference updated files in README.md and AGENTS.md
+7. **Commit:** Clear commit message explaining *why* (not *what*)
+
+---
+
+## Troubleshooting
+
+### Setup Failures
+
+Check the setup log:
+```bash
+cat ~/.dotfiles/setup.log
+```
+
+Re-run with verbose output:
+```bash
+sh setup.sh 2>&1 | tee setup-debug.log
+```
+
+### Module-Specific Issues
+
+**Load integration details from `.specs/codebase/INTEGRATIONS.md`** for service-specific troubleshooting
+
+### Testing Issues
+
+**Load testing guide from `.specs/codebase/TESTING.md`** for test execution and patterns
+
+---
+
+## File Locations Summary
+
+| File | Purpose | Created By |
+|------|---------|------------|
+| `~/.dotfilesrc` | Main env exports | setup.sh |
+| `~/.bashrc` | Bash config | to_bashrc() |
+| `~/.zshrc` | Zsh config | to_zshrc() |
+| `~/.gitconfig` | Git config | git/setup.sh |
+| `~/.config/nvim/lua` | Neovim config | nvim/setup.sh |
+| `~/.config/starship.toml` | Prompt config | terminal-tools/setup.sh |
+| `~/.local/bin/` | Custom scripts | local/setup.sh |
+| `~/.dotfiles/setup.log` | Setup output | setup.sh |
+
+---
+
+## Decision Log
+
+**Load complete decision log from `.specs/project/STATE.md`**
+
+Key architectural decisions:
+1. **POSIX Shell:** Portability across different systems
+2. **Homebrew First:** Consistency between platforms
+3. **Module-Based:** Easy to enable/disable, test, and maintain
+4. **Idempotent Design:** Safe to run multiple times
+
+---
+
+## Next Steps for Agents
+
+When starting work on this codebase:
+
+1. **Load `.specs/project/PROJECT.md`** - Understand vision and scope
+2. **Load `.specs/codebase/ARCHITECTURE.md`** - Understand patterns
+3. **Load `.specs/codebase/CONVENTIONS.md`** - Know code style rules
+4. **Load `.specs/codebase/STRUCTURE.md`** - Know where everything is
+5. **Check `.specs/codebase/TESTING.md`** - Know how to test
+6. **Reference `.specs/codebase/INTEGRATIONS.md`** - For external service details
+
+**Then start coding following the Essential Conventions summary above.**
+
+---
+
+Last Updated: 2025-01-28
