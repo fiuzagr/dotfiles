@@ -275,10 +275,60 @@ link_tree() {
     }
   done
 
-  find "$lt_src" \( -type f \) | while IFS= read -r p; do
-    rel=${p#"${lt_src}/"}
-    create_symlink "$p" "$lt_dst/$rel"
-  done
+   find "$lt_src" \( -type f \) | while IFS= read -r p; do
+     rel=${p#"${lt_src}/"}
+     create_symlink "$p" "$lt_dst/$rel"
+   done
 
+   return
+ }
+
+# Detect system package manager
+# Returns: "apt", "pacman", "dnf", "zypper", or "unknown"
+# Usage: pm=$(get_package_manager)
+get_package_manager() {
+  if command -v apt-get >/dev/null 2>&1; then
+    echo "apt"
+  elif command -v pacman >/dev/null 2>&1; then
+    echo "pacman"
+  elif command -v dnf >/dev/null 2>&1; then
+    echo "dnf"
+  elif command -v zypper >/dev/null 2>&1; then
+    echo "zypper"
+  else
+    echo "unknown"
+  fi
   return
 }
+
+# Install packages using the system's native package manager
+# Usage: install_system_packages cmake pkg-config python3
+install_system_packages() {
+  isp_manager=$(get_package_manager)
+  if [ $# -eq 0 ]; then
+    echo "Error: install_system_packages requires at least one package name" >&2
+    exit 1
+  fi
+
+  case "$isp_manager" in
+    apt)
+      sudo apt-get update -qq
+      sudo apt-get install -y "$@"
+      ;;
+    pacman)
+      sudo pacman -S --noconfirm "$@"
+      ;;
+    dnf)
+      sudo dnf install -y "$@"
+      ;;
+    zypper)
+      sudo zypper install -silent -y "$@"
+      ;;
+    *)
+      echo "Error: Unsupported package manager: $isp_manager" >&2
+      echo "Please ensure you have apt-get, pacman, dnf, or zypper installed" >&2
+      exit 1
+      ;;
+  esac
+}
+

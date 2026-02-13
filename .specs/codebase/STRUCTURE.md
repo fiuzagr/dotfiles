@@ -51,6 +51,9 @@ dotfiles/
 │   ├── setup.sh
 │   └── env
 │
+├── build-tools/                   # Development tools and libraries via Homebrew
+│   └── setup.sh
+│
 ├── node/                          # Node.js, npm, nvm setup
 │   ├── setup.sh
 │   └── env
@@ -138,8 +141,9 @@ dotfiles/
 | Module | Purpose | Key Files |
 |--------|---------|-----------|
 | **base** | System dependencies | setup.sh (installs Xcode CLT, apt packages) |
-| **fonts** | Font installation | setup.sh (sets up system fonts) |
 | **homebrew** | Package manager | setup.sh, env |
+| **build-tools** | Development tools via Homebrew | setup.sh |
+| **fonts** | Font installation | setup.sh (sets up system fonts) |
 | **local** | Local directory structure | setup.sh, env, bin/ |
 
 ### Category: Shell & Terminal
@@ -288,7 +292,7 @@ sh setup.sh
 **Module order matters (see setup.sh line 60):**
 
 ```
-base → shell → local → fonts → homebrew → flatpak → node → rustup → uv → ssh → gpg → git → terminal-tools → tmux → nvim → alacritty → docker → android → devtoys → opencode
+base → homebrew → build-tools → shell → local → fonts → flatpak → node → rustup → uv → ssh → gpg → git → terminal-tools → tmux → nvim → alacritty → docker → android → devtoys → opencode
 ```
 
 This ensures dependencies are installed before modules that need them.

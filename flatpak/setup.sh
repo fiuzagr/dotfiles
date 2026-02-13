@@ -5,6 +5,6 @@ if is_macos; then
   return 0
 fi
 
-sudo apt install -y flatpak gnome-software-plugin-flatpak
+brew install flatpak
 
 flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo

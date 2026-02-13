@@ -92,6 +92,8 @@ eval "$(atuin init "$DOTFILES_SHELL")"
 - `get_os()` - Detect operating system
 - `is_macos()` / `is_linux()` - OS-specific conditionals
 - `get_shell()` - Detect current shell (bash/zsh)
+- `get_package_manager()` - Detect system's native package manager
+- `install_system_packages()` - Install packages using system's package manager
 - `to_file()` - Append lines to config files idempotently
 - `to_dotfilesrc()` / `to_bashrc()` / `to_zshrc()` - Shell RC mutations
 - `to_shell_rc()` - Platform-agnostic RC mutation
@@ -126,10 +128,10 @@ Detects OS and Shell (macOS/Linux, bash/zsh)
     ↓
 Creates ~/.dotfilesrc with exports
     ↓
-For each module in order (base → shell → local → ... → opencode):
-    └─ Source module/setup.sh
-       └─ Create symlinks, install packages, configure
-       └─ Append to ~/.dotfilesrc: ". $DOTFILES_PATH/module/env"
+    For each module in order (base → homebrew → build-tools → shell → local → ... → opencode):
+        └─ Source module/setup.sh
+           └─ Create symlinks, install packages, configure
+           └─ Append to ~/.dotfilesrc: ". $DOTFILES_PATH/module/env"
     ↓
 All environment variables now available in new shell session
 ```
@@ -166,17 +168,19 @@ When shell starts:
 **Critical Path (must run in order):**
 
 ```
-base → homebrew → shell → [other modules]
+base → homebrew → build-tools → shell → [other modules]
 ```
 
 **Reasoning:**
-- `base`: Installs system dependencies (Xcode CLT, build tools, stow)
-- `homebrew`: Must run after base; provides package manager for all other modules
+- `base`: Installs minimal system dependencies (gcc/make/curl/git via native package manager)
+- `homebrew`: Must run after base; provides cross-platform package manager
+- `build-tools`: Must run after homebrew; installs development tools (cmake/python/stow) via brew
 - `shell`: Initializes shell configuration before other env setup
 - Others: Most can run in parallel, but dependencies noted below
 
 **Dependency Annotations:**
 
+- `build-tools`: Depends on `homebrew` (uses brew to install development packages)
 - `node`: Depends on `homebrew` (uses `brew install nvm`)
 - `local`: Depends on `base` (uses ~/.local/bin created in base)
 - `nvim`: Depends on `homebrew`
@@ -197,7 +201,7 @@ base → homebrew → shell → [other modules]
 **Module Boundaries:**
 
 - **Shell configuration** (shell/): Multiple shells supported (bash, zsh)
-- **Package manager setup** (homebrew, node, rustup, uv): Per-package-manager
+- **Package manager setup** (homebrew, build-tools, node, rustup, uv): Tools and package managers
 - **Tool configuration** (nvim, git, tmux, etc.): Per-tool
 - **System setup** (base, fonts, local): System-wide configuration
 - **Optional features** (devtoys, opencode, flatpak): Can be enabled/disabled
