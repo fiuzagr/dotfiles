@@ -89,7 +89,7 @@ sh test.sh
 | **Starship** | Cross-shell customizable prompt | brew install starship |
 | **Atuin** | Shell history sync & search | brew install atuin |
 | **Carapace** | Unified shell completion | brew install carapace |
-| **Alacritty** | GPU-accelerated terminal | brew install --cask alacritty |
+| **Ghostty** | GPU-accelerated terminal | brew install --cask ghostty |
 | **Tmux** | Terminal multiplexer | brew install tmux |
 
 ### Development Tools
@@ -221,7 +221,7 @@ All modules are located in `~/.dotfiles/[module-name]/` with a `setup.sh` script
 |--------|---------|-----------------|
 | **terminal-tools** | Starship, Atuin, Carapace, fzf, ripgrep, bat, eza, etc. | `sh setup.sh terminal-tools` |
 | **tmux** | Tmux configuration | `sh setup.sh tmux` |
-| **alacritty** | Alacritty terminal config | `sh setup.sh alacritty` |
+| **ghostty** | Ghostty terminal config | `sh setup.sh ghostty` |
 
 ### Optional/Specialized
 
@@ -240,7 +240,7 @@ Modules run in dependency order during full setup. Order matters because:
 
 ```
 base → shell → local → fonts → homebrew → flatpak → node → rustup → 
-uv → ssh → gpg → git → terminal-tools → tmux → nvim → alacritty → 
+uv → ssh → gpg → git → terminal-tools → tmux → nvim → ghostty → 
 docker → android → devtoys → opencode
 ```
 

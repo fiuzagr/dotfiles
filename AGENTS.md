@@ -26,7 +26,7 @@ sh test.sh
 
 **System Setup:** base, shell, local, fonts, homebrew
 **Development:** git, nvim, node, rustup, uv, docker
-**Terminal:** terminal-tools, tmux, alacritty
+**Terminal:** terminal-tools, tmux, ghostty
 **Optional:** opencode, devtoys, flatpak, android, gpg, ssh
 
 ---

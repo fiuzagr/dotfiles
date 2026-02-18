@@ -12,7 +12,7 @@
 ## Shell Configuration
 
 - **Terminal Multiplexer:** tmux
-- **Terminal Emulator:** Alacritty
+- **Terminal Emulator:** Ghostty
 - **Prompt:** Starship
 - **Shell History:** Atuin
 - **Shell Completion:** Carapace

@@ -1,6 +1,6 @@
 # Project State
 
-**Last Updated:** 2025-01-28
+**Last Updated:** 2025-02-18
 
 ## Current Session Status
 
@@ -19,8 +19,12 @@
    - Impact: Requires Homebrew installation as first step
 
 3. **Module-Based Architecture:** Each tool/feature in its own directory
-   - Reason: Easy to enable/disable, test, and maintain
-   - Impact: Some duplication (each module has setup.sh + env)
+    - Reason: Easy to enable/disable, test, and maintain
+    - Impact: Some duplication (each module has setup.sh + env)
+
+4. **Ghostty Terminal:** Migration from Alacritty to Ghostty
+    - Reason: Ghostty is cross-platform (macOS + Linux) with better Rust-based architecture
+    - Impact: Removed Alacritty module, updated documentation and module ordering
 
 ## Known Issues & TODOs
 
@@ -45,7 +49,7 @@ Explored complete codebase structure:
 **Total Modules:** 20+
 - Core: base, shell, local, fonts, homebrew
 - Development: git, node, rustup, uv, nvim
-- Tools: terminal-tools, tmux, alacritty, docker
+- Tools: terminal-tools, tmux, ghostty, docker
 - Optional: devtoys, opencode, flatpak, android, gpg, ssh
 
 **Key Files:**
@@ -63,6 +67,13 @@ Explored complete codebase structure:
 - Homebrew + apt package managers
 - npm, Cargo, uv, etc. for language package managers
 - Git integration with opencode
+
+## Recent Changes (Feb 2025)
+
+- **Terminal Migration:** Migrated from Alacritty to Ghostty as default terminal emulator
+- **Nvim Plugins Activated:** Enabled `diagram.nvim` and `image.nvim` plugins in LazyVim configuration
+- **Simplified Alacritty Setup:** Removed Linux-specific update-alternatives code from alacritty/setup.sh
+- **Updated Module Order:** Ghostty now replaces Alacritty in setup.sh execution order
 
 ## Blockers
 

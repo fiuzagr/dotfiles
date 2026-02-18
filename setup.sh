@@ -56,8 +56,8 @@ if [ $# -eq 0 ]; then
   to_dotfilesrc "export DOTFILES_SHELL=\"$DOTFILES_SHELL\""
   to_dotfilesrc "alias dotfiles='sh \$DOTFILES_PATH/setup.sh'"
 
-   # the order here matters!
-   modules="base homebrew build-tools shell local fonts flatpak node rustup uv ssh gpg git terminal-tools tmux nvim alacritty docker"
+  # the order here matters!
+  modules="base homebrew build-tools shell local fonts flatpak node rustup uv ssh gpg git terminal-tools tmux nvim ghostty docker"
 
   log
   log "$(hr)"

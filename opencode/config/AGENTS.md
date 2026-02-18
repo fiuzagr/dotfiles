@@ -10,7 +10,10 @@
 
 ## Rules
 
-- Use `question` tool every time you need to ask me something. Do not ask
-  questions in the chat, only use the tool.
+- Use `question` tool every time you need to ask me two or more questions. When
+  you need to ask only one question, ask it directly without using the `question`
+  tool.
 - Use the Mermaid syntax to generate diagrams inside documentation files. Do not
   use any other syntax for diagrams. Do not generate diagrams in any other way.
+- Never commit anything to the repository without my explicit instruction.
+  Always ask me before committing any code or documentation.

@@ -100,9 +100,9 @@ dotfiles/
 │       └── lua/
 │           └── [LazyVim config]
 │
-├── alacritty/                     # Alacritty terminal setup
+├── ghostty/                       # Ghostty terminal setup
 │   ├── setup.sh
-│   └── alacritty.toml
+│   └── config
 │
 ├── docker/                        # Docker Desktop setup
 │   └── setup.sh
@@ -153,7 +153,7 @@ dotfiles/
 | **shell** | Shell configuration | setup.sh, common/env, bash/env, zsh/env |
 | **terminal-tools** | CLI tools | setup.sh, env, starship.toml |
 | **tmux** | Terminal multiplexer | setup.sh, config/ |
-| **alacritty** | Terminal emulator | setup.sh, alacritty.toml |
+| **ghostty** | Terminal emulator | setup.sh, config |
 
 ### Category: Development Tools
 
@@ -275,7 +275,7 @@ skills/
 | ~/.gitconfig | Git user config | git/setup.sh |
 | ~/.config/nvim/lua | Neovim config | nvim/setup.sh (symlink) |
 | ~/.config/starship.toml | Starship prompt | terminal-tools/setup.sh (symlink) |
-| ~/.config/alacritty/alacritty.toml | Alacritty config | alacritty/setup.sh (symlink) |
+| ~/.config/ghostty/config | Ghostty config | ghostty/setup.sh (symlink) |
 | ~/.config/opencode/config | OpenCode config | opencode/setup.sh (symlink) |
 | ~/.local/bin/ | Custom scripts | local/setup.sh (link_tree) |
 
@@ -292,7 +292,7 @@ sh setup.sh
 **Module order matters (see setup.sh line 60):**
 
 ```
-base → homebrew → build-tools → shell → local → fonts → flatpak → node → rustup → uv → ssh → gpg → git → terminal-tools → tmux → nvim → alacritty → docker → android → devtoys → opencode
+base → homebrew → build-tools → shell → local → fonts → flatpak → node → rustup → uv → ssh → gpg → git → terminal-tools → tmux → nvim → ghostty → docker → android → devtoys → opencode
 ```
 
 This ensures dependencies are installed before modules that need them.

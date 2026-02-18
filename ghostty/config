@@ -1,0 +1,16 @@
+working-directory = "$HOME/workspace"
+maximize = true
+title = xhell
+
+window-save-state = always
+window-padding-x = 10
+window-padding-y = 10
+window-width = 120
+window-height = 30
+
+font-size = 15.0
+
+mouse-scroll-multiplier = 3
+
+adjust-cell-width = 1
+adjust-cell-height = 5

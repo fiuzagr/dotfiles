@@ -27,7 +27,7 @@ eval "$("$BREW_PREFIX"/bin/brew shellenv)"
 **Key packages installed via brew:**
 
 - All primary development tools
-- nvim, git, gh, tmux, alacritty
+- nvim, git, gh, tmux, ghostty
 - Starship, atuin, carapace, fzf, ripgrep, bat, eza
 - Docker Desktop
 - nvm, deno, bun
@@ -420,19 +420,19 @@ create_symlink "$DOTFILES_PATH/nvim/lazyvim/lua" "$HOME/.config/nvim/lua"
 
 **Configuration:** `nvim/lazyvim/lua/` contains full LazyVim setup
 
-### Alacritty Terminal
+### Ghostty Terminal
 
-**Service:** https://github.com/alacritty/alacritty
+**Service:** https://ghostty.org/
 
-**Purpose:** GPU-accelerated terminal emulator
+**Purpose:** Cross-platform GPU-accelerated terminal emulator (macOS + Linux)
 
-**Implementation:** `alacritty/setup.sh`
+**Implementation:** `ghostty/setup.sh`
 
 **Setup:**
 
 ```sh
-brew install --cask alacritty
-create_symlink "$DOTFILES_PATH/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml"
+brew install --cask ghostty
+create_symlink "$DOTFILES_PATH/ghostty/config" "$HOME/.config/ghostty/config"
 ```
 
 ## System Integration
@@ -566,7 +566,7 @@ ls -l ~/.config/app  # Should show -> .../dotfiles/module/config
 |---------|-----------------|--------------|
 | Starship | ~/.config/starship.toml | dotfiles/terminal-tools/ |
 | Neovim | ~/.config/nvim/lua | dotfiles/nvim/lazyvim/ |
-| Alacritty | ~/.config/alacritty/alacritty.toml | dotfiles/alacritty/ |
+| Ghostty | ~/.config/ghostty/config | dotfiles/ghostty/ |
 | Git | ~/.gitconfig | dotfiles/git/gitconfig |
 | OpenCode | ~/.config/opencode | dotfiles/opencode/config |
 | Tmux | ~/.config/tmux | dotfiles/tmux/config |

@@ -13,7 +13,7 @@
 - `helpers.sh` - Utility functions
 - `gitconfig` - Git configuration
 - `.zshrc`, `.bashrc` - Shell RC files
-- `alacritty.toml` - Tool config files
+- `config` - Tool config files (ghostty, etc.)
 - `starship.toml` - Starship prompt config
 
 **Convention:** No special prefixes, descriptive names
