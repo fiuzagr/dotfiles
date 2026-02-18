@@ -14,3 +14,6 @@ mouse-scroll-multiplier = 3
 
 adjust-cell-width = 1
 adjust-cell-height = 5
+
+# to work shift+enter with Tmux
+keybind = shift+enter=text:\x1b[13;2u

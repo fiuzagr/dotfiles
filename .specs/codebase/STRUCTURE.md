@@ -128,6 +128,10 @@ dotfiles/
 │       │   └── [other skills]/
 │       └── node_modules/         # AI SDK dependencies
 │
+├── llm/                           # LLM command generator
+│   ├── setup.sh
+│   └── env                        # OpenRouter API key config
+│
 ├── test-module/                   # Example/template module
 │   └── setup.sh
 │
@@ -171,6 +175,7 @@ dotfiles/
 | Module | Purpose | Key Files |
 |--------|---------|-----------|
 | **opencode** | AI agent integration | setup.sh, config/ |
+| **llm** | Natural language to shell commands | setup.sh, env |
 | **devtoys** | Developer tools | setup.sh |
 | **flatpak** | Container system | setup.sh |
 | **android** | Android development | setup.sh, env |
@@ -278,6 +283,7 @@ skills/
 | ~/.config/ghostty/config | Ghostty config | ghostty/setup.sh (symlink) |
 | ~/.config/opencode/config | OpenCode config | opencode/setup.sh (symlink) |
 | ~/.local/bin/ | Custom scripts | local/setup.sh (link_tree) |
+| ~/.local/share/llm/history.log | LLM command history | llm/setup.sh |
 
 ## Dependency Recommendations
 

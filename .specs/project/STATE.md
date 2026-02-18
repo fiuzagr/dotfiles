@@ -4,9 +4,9 @@
 
 ## Current Session Status
 
-- **Status:** Initializing project with TLC Spec-Driven workflow
-- **Task:** Setting up .specs/ documentation structure
-- **Progress:** Creating PROJECT.md, ROADMAP.md, and brownfield mapping docs
+- **Status:** Feature implemented: LLM Command Generator
+- **Task:** Completed implementation of `llm` CLI tool
+- **Progress:** All tasks done, tests passing, documentation updated
 
 ## Key Decisions
 
@@ -26,6 +26,11 @@
     - Reason: Ghostty is cross-platform (macOS + Linux) with better Rust-based architecture
     - Impact: Removed Alacritty module, updated documentation and module ordering
 
+5. **LLM Command Generator:** Using OpenRouter API (not Ollama)
+    - Reason: OpenRouter provides access to multiple LLM providers with single API
+    - Impact: Requires `OPENROUTER_API_KEY` environment variable, no local LLM dependency
+    - Default model: `anthropic/claude-3.5-sonnet` (best balance for command generation)
+
 ## Known Issues & TODOs
 
 - [ ] test.sh needs expansion to cover more helpers.sh functions
@@ -33,6 +38,7 @@
 - [ ] No dry-run mode for setup.sh
 - [ ] Limited error recovery in setup process
 - [ ] OpenCode skills installation needs improvement (hardcoded npx commands)
+- [x] **DONE:** Implement `llm` command generator (spec at `.specs/features/llm/`)
 
 ## Decisions to Make
 
@@ -70,6 +76,8 @@ Explored complete codebase structure:
 
 ## Recent Changes (Feb 2025)
 
+- **LLM Command Generator Implemented:** Created `local/bin/llm` script with OpenRouter API integration, confirmation prompts, clipboard support, and command history
+- **LLM Command Generator Planning:** Created spec-driven documentation at `.specs/features/llm/` with spec.md, design.md, and tasks.md
 - **Terminal Migration:** Migrated from Alacritty to Ghostty as default terminal emulator
 - **Nvim Plugins Activated:** Enabled `diagram.nvim` and `image.nvim` plugins in LazyVim configuration
 - **Simplified Alacritty Setup:** Removed Linux-specific update-alternatives code from alacritty/setup.sh
@@ -81,6 +89,7 @@ None currently identified - project is in active development phase.
 
 ## Next Steps (After This Session)
 
-1. **Short-term:** Document each module in README
-2. **Medium-term:** Expand test coverage with proper shell test framework
-3. **Long-term:** Build community feedback loop for module improvements
+1. **Immediate:** Test `llm` command with real OpenRouter API key
+2. **Short-term:** Document each module in README
+3. **Medium-term:** Expand test coverage with proper shell test framework
+4. **Long-term:** Build community feedback loop for module improvements

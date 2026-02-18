@@ -10,6 +10,9 @@
 
 ## Rules
 
+- Never implement any code or write any documentation without my explicit
+  instruction. Always ask me before implementing any code or writing any
+  documentation.
 - Use `question` tool every time you need to ask me two or more questions. When
   you need to ask only one question, ask it directly without using the `question`
   tool.
