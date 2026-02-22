@@ -1,4 +1,4 @@
-working-directory = "$HOME/workspace"
+#working-directory = "$HOME/workspace"
 maximize = true
 title = xhell
 

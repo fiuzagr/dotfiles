@@ -3,12 +3,10 @@
 set -e
 
 LLM_VERSION="1.0.0"
-LLM_DEFAULT_MODEL="x-ai/grok-code-fast-1"
+LLM_DEFAULT_MODEL="anthropic/claude-opus-4.5"
 LLM_API_URL="https://openrouter.ai/api/v1/chat/completions"
 LLM_HISTORY_DIR="$HOME/.local/share/llm"
 LLM_HISTORY_FILE="$LLM_HISTORY_DIR/history.log"
-
-
 
 llm_show_usage() {
   cat <<EOF
@@ -16,6 +14,9 @@ Version: $LLM_VERSION
 Usage: llm [--debug] "natural language description"
 
 Convert natural language to shell commands using OpenRouter API.
+
+Requirements:
+  jq                   Required. JSON processor (install via brew/apt)
 
 Options:
   --debug    Show debug information including request payload and API responses
@@ -30,6 +31,17 @@ Examples:
   llm --debug "list the 10 largest files in current directory"
   llm "kill the process using port 3000"
 EOF
+}
+
+llm_check_dependencies() {
+  if ! command -v jq >/dev/null 2>&1; then
+    echo "Error: jq is required but not installed" >&2
+    echo "" >&2
+    echo "Install with:" >&2
+    echo "  macOS:   brew install jq" >&2
+    echo "  Linux:   apt install jq / dnf install jq" >&2
+    exit 1
+  fi
 }
 
 llm_check_api_key() {
@@ -52,17 +64,17 @@ llm_get_model() {
 
 llm_get_os() {
   case "$(uname -s)" in
-    Darwin*) echo "macOS" ;;
-    Linux*)  echo "Linux" ;;
-    *)       echo "unknown" ;;
+  Darwin*) echo "macOS" ;;
+  Linux*) echo "Linux" ;;
+  *) echo "unknown" ;;
   esac
 }
 
 llm_get_shell() {
   case "$SHELL" in
-    *zsh)  echo "zsh" ;;
-    *bash) echo "bash" ;;
-    *)     echo "sh" ;;
+  *zsh) echo "zsh" ;;
+  *bash) echo "bash" ;;
+  *) echo "sh" ;;
   esac
 }
 
@@ -111,10 +123,14 @@ EOF
     -d "$lca_payload" 2>/dev/null
 }
 
+llm_sanitize_json() {
+  tr -d '\n\r' | sed 's/\\;/\\\\;/g; s/\\(/\\\\(/g; s/\\)/\\\\)/g'
+}
+
 llm_extract_command() {
   lec_response="$1"
 
-  lec_content=$(echo "$lec_response" | sed -n 's/.*"content"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+  lec_content=$(printf '%s' "$lec_response" | llm_sanitize_json | jq -r '.choices[0].message.content // empty')
 
   if [ -z "$lec_content" ]; then
     return 1
@@ -126,9 +142,7 @@ llm_extract_command() {
 llm_clean_command() {
   lcc_raw="$1"
 
-  lcc_cmd=$(echo "$lcc_raw" | sed 's/\\n/\n/g' | sed 's/\\t/ /g' | sed 's/\\u003e/>/g' | sed 's/\\u003c/</g' | sed 's/\\u0026/\&/g' | sed "s/\\\\u0027/'/g" | sed 's/\\u0022/"/g')
-
-  lcc_cmd=$(echo "$lcc_cmd" | sed 's/```bash//g' | sed 's/```sh//g' | sed 's/```shell//g' | sed 's/```//g')
+  lcc_cmd=$(echo "$lcc_raw" | sed 's/```bash//g' | sed 's/```sh//g' | sed 's/```shell//g' | sed 's/```//g')
 
   lcc_cmd=$(echo "$lcc_cmd" | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
 
@@ -198,6 +212,7 @@ main() {
 
   llm_show_colors
 
+  llm_check_dependencies
   llm_check_api_key
 
   lpm_user_input="$*"
@@ -210,42 +225,36 @@ main() {
   lpm_http_code=$(echo "$lpm_api_response" | tail -1)
   lpm_response_body=$(echo "$lpm_api_response" | sed '$d')
 
+  if [ "$LLM_DEBUG" = "1" ] && [ -n "$lpm_response_body" ]; then
+    printf "${LLM_RED}Response: %s${LLM_NC}\n" "$lpm_response_body" >&2
+  fi
+
   case "$lpm_http_code" in
-    200)
-      ;;
-    400)
-      printf "${LLM_RED}Error: Bad request (HTTP %s)${LLM_NC}\n" "$lpm_http_code" >&2
-      if [ "$LLM_DEBUG" = "1" ] && [ -n "$lpm_response_body" ]; then
-        printf "${LLM_RED}Response: %s${LLM_NC}\n" "$lpm_response_body" >&2
-      fi
-      printf "${LLM_RED}Check your model name and ensure all parameters are valid.${LLM_NC}\n" >&2
-      exit 1
-      ;;
-    401)
-      printf "${LLM_RED}Error: Invalid API key (HTTP %s)${LLM_NC}\n" "$lpm_http_code" >&2
-      if [ "$LLM_DEBUG" = "1" ] && [ -n "$lpm_response_body" ]; then
-        printf "${LLM_RED}Response: %s${LLM_NC}\n" "$lpm_response_body" >&2
-      fi
-      printf "${LLM_RED}Check your OPENROUTER_API_KEY is valid.${LLM_NC}\n" >&2
-      exit 1
-      ;;
-    429)
-      printf "${LLM_RED}Error: Rate limit exceeded (HTTP %s)${LLM_NC}\n" "$lpm_http_code" >&2
-      printf "${LLM_RED}Please wait and try again${LLM_NC}\n" >&2
-      exit 1
-      ;;
-    5XX)
-      printf "${LLM_RED}Error: Server error (HTTP %s)${LLM_NC}\n" "$lpm_http_code" >&2
-      printf "${LLM_RED}Try again later or check OpenRouter status.${LLM_NC}\n" >&2
-      exit 1
-      ;;
-    *)
-      printf "${LLM_RED}Error: API request failed (HTTP %s)${LLM_NC}\n" "$lpm_http_code" >&2
-      if [ "$LLM_DEBUG" = "1" ] && [ -n "$lpm_response_body" ]; then
-        printf "${LLM_RED}Response: %s${LLM_NC}\n" "$lpm_response_body" >&2
-      fi
-      exit 1
-      ;;
+  200) ;;
+  400)
+    printf "${LLM_RED}Error: Bad request (HTTP %s)${LLM_NC}\n" "$lpm_http_code" >&2
+    printf "${LLM_RED}Check your model name and ensure all parameters are valid.${LLM_NC}\n" >&2
+    exit 1
+    ;;
+  401)
+    printf "${LLM_RED}Error: Invalid API key (HTTP %s)${LLM_NC}\n" "$lpm_http_code" >&2
+    printf "${LLM_RED}Check your OPENROUTER_API_KEY is valid.${LLM_NC}\n" >&2
+    exit 1
+    ;;
+  429)
+    printf "${LLM_RED}Error: Rate limit exceeded (HTTP %s)${LLM_NC}\n" "$lpm_http_code" >&2
+    printf "${LLM_RED}Please wait and try again${LLM_NC}\n" >&2
+    exit 1
+    ;;
+  5XX)
+    printf "${LLM_RED}Error: Server error (HTTP %s)${LLM_NC}\n" "$lpm_http_code" >&2
+    printf "${LLM_RED}Try again later or check OpenRouter status.${LLM_NC}\n" >&2
+    exit 1
+    ;;
+  *)
+    printf "${LLM_RED}Error: API request failed (HTTP %s)${LLM_NC}\n" "$lpm_http_code" >&2
+    exit 1
+    ;;
   esac
 
   lpm_raw_command=$(llm_extract_command "$lpm_response_body")
