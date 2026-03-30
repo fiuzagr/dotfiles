@@ -1,3 +1,0 @@
-#!/usr/bin/env sh
-
-npx -y @upstash/context7-mcp --api-key "$CONTEXT7_API_KEY"

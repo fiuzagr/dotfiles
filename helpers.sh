@@ -7,6 +7,24 @@ log() {
   return
 }
 
+log_error() {
+  log
+  log "$(hr)"
+  log "$(fgc red)$(e x) Error: $1 $(fgc end)"
+  if [ "$2" != "" ]; then
+    log "See $2 for details."
+  fi
+  log "$(hr)"
+}
+
+copy_to_clipboard() {
+  if is_macos; then
+    pbcopy
+  else
+    xclip -selection clipboard
+  fi
+}
+
 # Append a line to .bashrc if it doesn't already exist
 # $1 - file to test and append
 # $2 - regex test OR line to append
@@ -29,11 +47,11 @@ to_file() {
   fi
 
   if ! grep -q "$tf_test_or_line" "$tf_file"; then
-    echo '' >> "$tf_file"
+    echo '' >>"$tf_file"
     if [ -n "$tf_line_if_test" ]; then
-      echo "$tf_line_if_test" >> "$tf_file"
+      echo "$tf_line_if_test" >>"$tf_file"
     else
-      echo "$tf_test_or_line" >> "$tf_file"
+      echo "$tf_test_or_line" >>"$tf_file"
     fi
   fi
 
@@ -64,7 +82,100 @@ to_bashrc() {
   return
 }
 
+# Get current operating system
+# Returns: "darwin" on macOS, "linux" on Linux, "unknown" otherwise
+# Usage: os=$(get_os)
+get_os() {
+  go_uname=$(uname -s)
+  case "$go_uname" in
+  Darwin*)
+    echo "darwin"
+    ;;
+  Linux*)
+    echo "linux"
+    ;;
+  *)
+    echo "unknown"
+    ;;
+  esac
+  return
+}
+
+# Check if running on macOS
+# Returns: 0 (success) on macOS, 1 otherwise
+# Usage: if is_macos; then ...; fi
+is_macos() {
+  im_os=$(get_os)
+  if [ "$im_os" = "darwin" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# Check if running on Linux
+# Returns: 0 (success) on Linux, 1 otherwise
+# Usage: if is_linux; then ...; fi
+is_linux() {
+  il_os=$(get_os)
+  if [ "$il_os" = "linux" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# Get current shell type
+# Returns: "zsh", "bash", or "bash" (fallback)
+# Usage: shell=$(get_shell)
+get_shell() {
+  gs_shell="$SHELL"
+  case "$gs_shell" in
+  *zsh)
+    echo "zsh"
+    ;;
+  *bash)
+    echo "bash"
+    ;;
+  *)
+    echo "bash"
+    ;;
+  esac
+  return
+}
+
+# Append a line to ~/.zshrc if it doesn't already exist
+# $1 - regex test OR line to append
+# $2 - line to append (if $1 is regex test)
+# Usages:
+#   to_zshrc 'export PATH=$HOME/.local/bin:$PATH'
+#   to_zshrc '\\.my_custom_script' 'source $HOME/.my_custom_script'
+to_zshrc() {
+  touch "$HOME/.zshrc"
+  to_file "$HOME/.zshrc" "$1" "$2"
+  return
+}
+
+# Append a line to shell RC file based on current shell
+# $1 - regex test OR line to append
+# $2 - line to append (if $1 is regex test)
+# Usages:
+#   to_shell_rc 'export PATH=$HOME/.local/bin:$PATH'
+#   to_shell_rc '\\.my_custom_script' 'source $HOME/.my_custom_script'
+to_shell_rc() {
+  tsr_shell=$(get_shell)
+  if [ "$tsr_shell" = "zsh" ]; then
+    to_zshrc "$1" "$2"
+  else
+    to_bashrc "$1" "$2"
+  fi
+  return
+}
+
 # Create a symbolic link, backing up any existing file/directory at the destination
+# This function is idempotent: running it multiple times with the same parameters
+# will not recreate the link if it already exists pointing to the correct source.
+# All symbolic links are created using absolute paths.
 # $1 - source path
 # $2 - destination path
 # Usage:
@@ -83,16 +194,57 @@ create_symlink() {
     exit 1
   fi
 
-  if [ ! -L "$cs_dst" ] && [ -e "$cs_dst" ]; then
+  # Convert source to absolute path
+  if [ -d "$cs_src" ]; then
+    cs_src_abs=$(cd "$cs_src" && pwd)
+  else
+    cs_src_abs=$(cd "$(dirname "$cs_src")" && pwd)/$(basename "$cs_src")
+  fi
+
+  # Check if destination already exists
+  if [ -L "$cs_dst" ]; then
+    # Destination is a symbolic link
+    cs_current_target=$(readlink "$cs_dst")
+
+    if [ "$cs_current_target" = "$cs_src_abs" ]; then
+      # Idempotent: link already exists and points to correct source
+      log "Symbolic link '$cs_dst' already exists and points to '$cs_src_abs'"
+      return 0
+    fi
+
+    # Link points to different source, remove old link
+    log "Removing old symbolic link '$cs_dst' (was pointing to '$cs_current_target')"
+    rm "$cs_dst" || {
+      echo "Failed to remove old symbolic link '$cs_dst'" >&2
+      exit 1
+    }
+  elif [ -e "$cs_dst" ]; then
+    # Destination exists but is not a symbolic link (regular file/directory)
     BACKUP_PATH="${cs_dst}_backup_$(date +%Y%m%d_%H%M%S)"
-    mv "$cs_dst" "$BACKUP_PATH" || { echo "Failed to create backup of '$cs_dst'" >&2; exit 1; }
+    mv "$cs_dst" "$BACKUP_PATH" || {
+      echo "Failed to create backup of '$cs_dst'" >&2
+      exit 1
+    }
     log "Existing file/directory '$cs_dst' backed up to '$BACKUP_PATH'"
   fi
 
-  ln -sf "$cs_src" "$cs_dst" || { echo "Failed to create symbolic link from '$cs_src' to '$cs_dst'" >&2; exit 1; }
-  log "Created symbolic link from '$cs_src' to '$cs_dst'"
+  # Create parent directory of destination if it doesn't exist
+  cs_dst_dir=$(dirname "$cs_dst")
+  if [ ! -d "$cs_dst_dir" ]; then
+    mkdir -p "$cs_dst_dir" || {
+      echo "Failed to create parent directory '$cs_dst_dir'" >&2
+      exit 1
+    }
+  fi
 
-  return
+  # Create symbolic link using absolute path
+  ln -s "$cs_src_abs" "$cs_dst" || {
+    echo "Failed to create symbolic link from '$cs_src_abs' to '$cs_dst'" >&2
+    exit 1
+  }
+  log "Created symbolic link '$cs_dst' -> '$cs_src_abs'"
+
+  return 0
 }
 
 # Create a directory tree at the destination and create symbolic links for all files from the source
@@ -123,10 +275,60 @@ link_tree() {
     }
   done
 
-  find "$lt_src" \( -type f \) | while IFS= read -r p; do
-    rel=${p#"${lt_src}/"}
-    create_symlink "$p" "$lt_dst/$rel"
-  done
+   find "$lt_src" \( -type f \) | while IFS= read -r p; do
+     rel=${p#"${lt_src}/"}
+     create_symlink "$p" "$lt_dst/$rel"
+   done
 
+   return
+ }
+
+# Detect system package manager
+# Returns: "apt", "pacman", "dnf", "zypper", or "unknown"
+# Usage: pm=$(get_package_manager)
+get_package_manager() {
+  if command -v apt-get >/dev/null 2>&1; then
+    echo "apt"
+  elif command -v pacman >/dev/null 2>&1; then
+    echo "pacman"
+  elif command -v dnf >/dev/null 2>&1; then
+    echo "dnf"
+  elif command -v zypper >/dev/null 2>&1; then
+    echo "zypper"
+  else
+    echo "unknown"
+  fi
   return
 }
+
+# Install packages using the system's native package manager
+# Usage: install_system_packages cmake pkg-config python3
+install_system_packages() {
+  isp_manager=$(get_package_manager)
+  if [ $# -eq 0 ]; then
+    echo "Error: install_system_packages requires at least one package name" >&2
+    exit 1
+  fi
+
+  case "$isp_manager" in
+    apt)
+      sudo apt-get update -qq
+      sudo apt-get install -y "$@"
+      ;;
+    pacman)
+      sudo pacman -S --noconfirm "$@"
+      ;;
+    dnf)
+      sudo dnf install -y "$@"
+      ;;
+    zypper)
+      sudo zypper install -silent -y "$@"
+      ;;
+    *)
+      echo "Error: Unsupported package manager: $isp_manager" >&2
+      echo "Please ensure you have apt-get, pacman, dnf, or zypper installed" >&2
+      exit 1
+      ;;
+  esac
+}
+

@@ -1,12 +1,40 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "default_agent": "plan",
   "theme": "everforest",
-  "lsp": { "clangd": { "disabled": true } },
   "mcp": {
-    "MCP_DOCKER": {
-      "type": "local",
-      "command": ["docker", "mcp", "gateway", "run"],
-      "enabled": true
+    "DOCKER_MCP_TOOLKIT": {
+      "command": [
+        "docker",
+        "mcp",
+        "gateway",
+        "run"
+      ],
+      "enabled": true,
+      "type": "local"
+    },
+    "FIGMA_LOCAL": {
+      "enabled": true,
+      "type": "remote",
+      "url": "http://127.0.0.1:3845/mcp"
+    },
+    "TANSTACK": {
+      "command": [
+        "npx",
+        "@tanstack/cli",
+        "mcp"
+      ],
+      "enabled": true,
+      "type": "local"
     }
-  }
+  },
+  "plugin": [],
+  // "agent": {
+  //   "build": {
+  //     "model": "openrouter/x-ai/grok-code-fast-1",
+  //   },
+  //   "plan": {
+  //     "model": "openrouter/z-ai/glm-5",
+  //   }
+  // }
 }
