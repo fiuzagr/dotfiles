@@ -11,7 +11,11 @@ return {
       require("dbee").install()
     end,
     config = function()
-      require("dbee").setup(--[[optional config]])
+      require("dbee").setup({
+        sources = {
+          require("dbee.sources").EnvSource:new("DBEE_CONNECTIONS"),
+        },
+      })
     end,
   },
 }

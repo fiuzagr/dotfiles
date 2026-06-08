@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+
+set -e
+
+PROXY_DIR="$HOME/.cache/headroom"
+PROXY_PID_FILE="$PROXY_DIR/proxy.pid"
+PROXY_LOG="$PROXY_DIR/proxy.log"
+PROXY_PORT=8787
+
+mkdir -p "$PROXY_DIR"
+
+proxy_is_running() {
+  [ -f "$PROXY_PID_FILE" ] || return 1
+  PID=$(cat "$PROXY_PID_FILE")
+  kill -0 "$PID" 2>/dev/null
+}
+
+if ! proxy_is_running; then
+  headroom proxy --port "$PROXY_PORT" >"$PROXY_LOG" 2>&1 &
+  echo $! > "$PROXY_PID_FILE"
+fi
+
+opencode

@@ -1,8 +1,9 @@
 #!/usr/bin/env sh
 
 workspace_dir="$HOME/workspace/"
-project_name="$1"
-project_dir="$workspace_dir/$project_name"
+project_dir="$1"
+project_owner="${1%%/*}"
+project_path="$workspace_dir/$project_dir"
 
 detached="$2"
 
@@ -11,33 +12,33 @@ cd "${workspace_dir}" || {
   exit 1
 }
 
-if [ ! -d "$project_dir" ]; then
-  gh repo clone "$project_name" "$project_dir" || {
-    echo "ERROR: Could not clone repository ${project_name}" >&2
+if [ ! -d "$project_path" ]; then
+  gh repo clone "$project_dir" "$project_path" || {
+    echo "ERROR: Could not clone repository ${project_dir}" >&2
     exit 1
   }
 fi
 
-cd "$project_dir" || {
-  echo "ERROR: Could not change directory to ${project_dir}" >&2
+cd "$project_path" || {
+  echo "ERROR: Could not change directory to ${project_path}" >&2
   exit 1
 }
 
-if ! tmux has-session -t "=$project_name" 2>/dev/null; then
-  tmux new-session -s "$project_name" -n "$project_name" -d
+if ! tmux -L "$project_owner" has-session -t "=$project_dir" 2>/dev/null; then
+  tmux -L "$project_owner" new-session -s "$project_dir" -n "$project_dir" -d
 
   # create moar windows
-  tmux new-window -t "$project_name":1 -n Code
-  tmux new-window -t "$project_name":2 -n Server
-  tmux new-window -t "$project_name":3 -n AI
+  tmux -L "$project_owner" new-window -t "$project_dir":1 -n Code
+  tmux -L "$project_owner" new-window -t "$project_dir":2 -n Server
+  tmux -L "$project_owner" new-window -t "$project_dir":3 -n AI
 
-  tmux send-keys -t "$project_name":0.0 "cd ${PWD}" C-m
-  tmux send-keys -t "$project_name":1.0 "cd ${PWD} && nvim" C-m
-  tmux send-keys -t "$project_name":2.0 "cd ${PWD}" C-m
-  tmux send-keys -t "$project_name":3.0 "cd ${PWD}" C-m
+  tmux -L "$project_owner" send-keys -t "$project_dir":0.0 "cd ${PWD}" C-m
+  tmux -L "$project_owner" send-keys -t "$project_dir":1.0 "cd ${PWD} && nvim" C-m
+  tmux -L "$project_owner" send-keys -t "$project_dir":2.0 "cd ${PWD}" C-m
+  tmux -L "$project_owner" send-keys -t "$project_dir":3.0 "cd ${PWD}" C-m
 
   # select the server window and pane
-  tmux select-window -t "$project_name":1.0
+  tmux -L "$project_owner" select-window -t "$project_dir":1.0
 fi
 
 if [ "$detached" = "detached" ]; then
@@ -45,7 +46,7 @@ if [ "$detached" = "detached" ]; then
 fi
 
 if [ -n "$TMUX" ]; then
-  tmux switch-client -t "$project_name"
+  tmux -L "$project_owner" switch-client -t "$project_dir"
 else
-  tmux attach -t "$project_name"
+  tmux -L "$project_owner" attach -t "$project_dir"
 fi

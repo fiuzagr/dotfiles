@@ -15,7 +15,7 @@ brew install direnv
 
 log 'eza as a ls alternative'
 brew install eza
-create_symlink "$(which eza)" "$HOME/.local/bin/ls"
+# create_symlink "$(which eza)" "$HOME/.local/bin/ls"
 
 log 'fd as a find alternative'
 brew install fd

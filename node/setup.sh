@@ -10,3 +10,5 @@ brew install oven-sh/bun/bun
 to_dotfilesrc ". \"\$DOTFILES_PATH/node/env\""
 
 nvm install --lts
+nvm alias default 'lts/*'
+nvm use default

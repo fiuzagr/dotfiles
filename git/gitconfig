@@ -8,6 +8,7 @@
   default = simple
 
 [alias]
+  pushu = !git push -f -u origin $(git branch --show-current)
   st = status
   co = checkout
   br = branch
