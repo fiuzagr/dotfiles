@@ -12,6 +12,7 @@ zsh) eval "$(carapace _carapace zsh)" ;;
 esac
 
 eval "$(direnv hook "$DOTFILES_SHELL")"
+[ -s "$HOME/.envrc" ] && . "$HOME/.envrc"
 
 case "$DOTFILES_SHELL" in
 bash) eval "$(fzf --bash)" ;;

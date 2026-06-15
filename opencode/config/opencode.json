@@ -1,44 +1,21 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "plan",
-  "small_model": "openrouter/deepseek/deepseek-v4-flash",
+  "small_model": "openrouter/z-ai/glm-4.7-flash",
   "agent": {
     "build": {
-      "model": "openrouter/qwen/qwen3.7-max"
+      "model": "openrouter/z-ai/glm-5.1"
     },
     "plan": {
-      "model": "openrouter/qwen/qwen3.7-max"
+      "model": "openrouter/z-ai/glm-5.1"
     }
   },
   "mcp": {
-    "figma_local": {
-      "enabled": true,
-      "type": "remote",
-      "url": "http://127.0.0.1:3845/mcp"
-    },
-    "figma": {
-      "enabled": true,
-      "type": "remote",
-      "url": "https://mcp.figma.com/mcp",
-      "oauth": {
-        "clientId": "{env:FIGMA_CLIENT_ID}",
-        "clientSecret": "{env:FIGMA_CLIENT_SECRET}"
-      }
-    },
     "chrome_devtools": {
       "command": [
         "npx",
         "-y",
         "chrome-devtools-mcp@latest"
-      ],
-      "enabled": true,
-      "type": "local"
-    },
-    "next_devtools": {
-      "command": [
-        "npx",
-        "-y",
-        "next-devtools-mcp@latest"
       ],
       "enabled": true,
       "type": "local"

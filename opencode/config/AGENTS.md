@@ -36,10 +36,15 @@
 - Mimic the code style, naming, and structure of neighboring files.
 - Prefer editing existing files over creating new ones.
 
-## Tool Preferences
+## Tools Constraints
 
+- **CRITICAL**: All tools should be called in lower case. Never call tools with
+  uppercase letters.
 - **CRITICAL**: Never call `unknown` or `invalid` tool. These tools does not
   exists and will cause errors.
+- YOU MUST USE THE PROVIDED TOOLS FOR ALL FILE OPERATIONS.
+- When using the bash tool, always include the description parameter with each
+  tool call to explain what the command does.
 - Always use `context7` tools to search library and framework documentation
   before guessing APIs or parameters.
 - Use `gh_grep` to find real-world code patterns and usage examples on GitHub

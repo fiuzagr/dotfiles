@@ -3,7 +3,7 @@
 set -e
 
 LLM_VERSION="1.0.0"
-LLM_DEFAULT_MODEL="anthropic/claude-opus-4.5"
+LLM_DEFAULT_MODEL="anthropic/claude-opus-4.8"
 LLM_API_URL="https://openrouter.ai/api/v1/chat/completions"
 LLM_HISTORY_DIR="$HOME/.local/share/llm"
 LLM_HISTORY_FILE="$LLM_HISTORY_DIR/history.log"
