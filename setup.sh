@@ -29,12 +29,18 @@ exec 1>>"$LOG_FILE" 2>&1
 
 . "$DOTFILES_PATH/helpers.sh"
 
-# Export OS and shell detection
+# Export OS, shell, and GUI detection
 DOTFILES_OS=$(get_os)
 export DOTFILES_OS
 
 DOTFILES_SHELL=$(get_shell)
 export DOTFILES_SHELL
+
+DOTFILES_HAS_GUI=0
+if has_gui; then
+  DOTFILES_HAS_GUI=1
+fi
+export DOTFILES_HAS_GUI
 
 echo "$(hr)"
 echo "Setup started at: $(date)"
@@ -54,15 +60,21 @@ if [ $# -eq 0 ]; then
   to_dotfilesrc "export DOTFILES_PATH=\"$DOTFILES_PATH\""
   to_dotfilesrc "export DOTFILESRC_PATH=\"$DOTFILESRC_PATH\""
   to_dotfilesrc "export DOTFILES_SHELL=\"$DOTFILES_SHELL\""
+  to_dotfilesrc "export DOTFILES_HAS_GUI=\"$DOTFILES_HAS_GUI\""
   to_dotfilesrc "alias dotfiles='sh \$DOTFILES_PATH/setup.sh'"
 
   # the order here matters!
-  modules="base homebrew build-tools shell local fonts flatpak node rustup uv ssh gpg git terminal-tools tmux nvim ghostty docker"
+  MODULES="base homebrew build-tools shell local fonts flatpak node rustup uv ssh gpg git terminal-tools tmux nvim ghostty docker"
+  GUI_MODULES="fonts flatpak ghostty alacritty"
 
   log
   log "$(hr)"
   log 'Performing FULL setup...'
-  log "modules: $modules"
+  if [ "$DOTFILES_HAS_GUI" -eq 0 ]; then
+    log 'No GUI detected — GUI modules will be skipped'
+    log "GUI modules: $GUI_MODULES"
+  fi
+  log "modules: $MODULES"
   log
 else
   if [ ! -f "$DOTFILESRC_PATH" ]; then
@@ -70,19 +82,33 @@ else
     exit 1
   fi
 
-  modules="$*"
+  MODULES="$*"
 fi
 
 save_IFS=$IFS
 IFS=' '
-for module in $modules; do
+for MODULE in $MODULES; do
   log
   log "$(hr)"
-  log "Performing '$module' module setup..."
+  log "Performing '$MODULE' module setup..."
 
-  if [ ! -f "$DOTFILES_PATH/$module/setup.sh" ]; then
-    log_error "Module '$module' does not exist."
+  if [ ! -f "$DOTFILES_PATH/$MODULE/setup.sh" ]; then
+    log_error "Module '$MODULE' does not exist."
     exit 1
+  fi
+
+  if [ "$DOTFILES_HAS_GUI" -eq 0 ]; then
+    skip_module=0
+    for gm in $GUI_MODULES; do
+      if [ "$MODULE" = "$gm" ]; then
+        skip_module=1
+        break
+      fi
+    done
+    if [ $skip_module -eq 1 ]; then
+      log "Skipping GUI module '$MODULE' (no graphical environment)"
+      continue
+    fi
   fi
 
   # Execute module in subshell to isolate error handling from set -e
@@ -90,13 +116,13 @@ for module in $modules; do
   # shellcheck disable=SC1090
   (
     set -e
-    . "$DOTFILES_PATH/$module/setup.sh"
+    . "$DOTFILES_PATH/$MODULE/setup.sh"
   )
   MODULE_EXIT_CODE=$?
   set -e
 
   if [ $MODULE_EXIT_CODE -ne 0 ]; then
-    log_error "Module '$module' setup failed." "$LOG_FILE"
+    log_error "Module '$MODULE' setup failed." "$LOG_FILE"
     exit 1
   fi
 done

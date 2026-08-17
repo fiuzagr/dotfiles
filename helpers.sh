@@ -283,6 +283,28 @@ link_tree() {
    return
  }
 
+is_headless() {
+  if has_gui; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+# Check if a graphical environment is available
+# Returns: 0 (success) if GUI is present, 1 otherwise
+# Usage: if has_gui; then ...; fi
+has_gui() {
+  if is_macos; then
+    return 0
+  fi
+  case "$XDG_SESSION_TYPE" in
+    x11|wayland) return 0 ;;
+  esac
+  [ -n "$DISPLAY" ] && return 0
+  return 1
+}
+
 # Detect system package manager
 # Returns: "apt", "pacman", "dnf", "zypper", or "unknown"
 # Usage: pm=$(get_package_manager)

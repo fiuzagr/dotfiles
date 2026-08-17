@@ -50,7 +50,7 @@ cd ~/.dotfiles
 sh setup.sh
 ```
 
-**Full Setup** - Installs all modules:
+**Full Setup** - Installs all modules (auto-skips GUI modules on headless systems):
 ```shell
 sh setup.sh
 ```
@@ -59,6 +59,13 @@ sh setup.sh
 ```shell
 sh setup.sh node nvim docker
 ```
+
+**Two-Phase Setup (Headless Servers):**
+
+On headless systems (no X11/Wayland), GUI modules are automatically skipped:
+
+- **Phase 1:** `sh setup.sh` — installs all CLI/TUI modules
+- **Phase 2:** After adding a desktop, `sh setup.sh fonts flatpak ghostty` — installs GUI modules
 
 **Test your setup:**
 ```shell
@@ -223,13 +230,21 @@ All modules are located in `~/.dotfiles/[module-name]/` with a `setup.sh` script
 | **tmux** | Tmux configuration | `sh setup.sh tmux` |
 | **ghostty** | Ghostty terminal config | `sh setup.sh ghostty` |
 
+### GUI Modules (skipped on headless)
+
+| Module | Purpose | Install Command |
+|--------|---------|-----------------|
+| **fonts** | Nerd Fonts (FiraCode, JetBrainsMono) | `sh setup.sh fonts` |
+| **flatpak** | Flatpak container system (Linux) | `sh setup.sh flatpak` |
+| **ghostty** | Ghostty terminal config | `sh setup.sh ghostty` |
+| **alacritty** | Alacritty terminal config | `sh setup.sh alacritty` |
+
 ### Optional/Specialized
 
 | Module | Purpose | Install Command |
 |--------|---------|-----------------|
 | **opencode** | OpenCode AI agent + skills | `sh setup.sh opencode` |
 | **devtoys** | Developer utility tools | `sh setup.sh devtoys` |
-| **flatpak** | Flatpak container system (Linux) | `sh setup.sh flatpak` |
 | **android** | Android SDK & tools | `sh setup.sh android` |
 | **gpg** | GPG/PGP encryption | `sh setup.sh gpg` |
 | **ssh** | SSH configuration | `sh setup.sh ssh` |
@@ -261,8 +276,9 @@ The dotfiles system uses a **modular orchestration pattern**:
 ```
 setup.sh (main entry point)
   ├─ Loads helpers.sh (utility functions)
-  ├─ Detects OS (macOS/Linux) and Shell (bash/zsh)
+  ├─ Detects OS (macOS/Linux), Shell (bash/zsh), and GUI (headless/graphical)
   ├─ For each module in dependency order:
+  │   ├─ Skips GUI modules if headless (no X11/Wayland)
   │   └─ Executes [module]/setup.sh
   │       ├─ Install packages (via brew/apt)
   │       ├─ Create symlinks for configs

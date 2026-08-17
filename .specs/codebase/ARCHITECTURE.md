@@ -92,6 +92,8 @@ eval "$(atuin init "$DOTFILES_SHELL")"
 - `get_os()` - Detect operating system
 - `is_macos()` / `is_linux()` - OS-specific conditionals
 - `get_shell()` - Detect current shell (bash/zsh)
+- `has_gui()` - Detect graphical environment (X11/Wayland/$DISPLAY on Linux, always true on macOS)
+- `is_headless()` - Inverse of `has_gui()`
 - `get_package_manager()` - Detect system's native package manager
 - `install_system_packages()` - Install packages using system's package manager
 - `to_file()` - Append lines to config files idempotently
@@ -108,10 +110,11 @@ eval "$(atuin init "$DOTFILES_SHELL")"
 
 **Implementation:**
 - Detects full setup (no args) vs selective module setup (with args)
-- Loads environment variables (DOTFILES_PATH, DOTFILES_OS, DOTFILES_SHELL)
+- Loads environment variables (DOTFILES_PATH, DOTFILES_OS, DOTFILES_SHELL, DOTFILES_HAS_GUI)
 - Creates/rotates log file
+- Detects GUI availability (`has_gui()`); skips GUI modules on headless systems
 - Executes modules in order within subshells (error isolation)
-- Exports OS and shell detection for use in modules
+- Exports OS, shell, and GUI detection for use in modules
 
 ## Data Flow
 
@@ -234,3 +237,44 @@ fi
 ```
 
 This allows graceful error capture and reporting.
+
+### 5. GUI Detection and Two-Phase Setup Pattern
+
+**Location:** `helpers.sh` (`has_gui()`, `is_headless()`) and `setup.sh`
+
+**Purpose:** Skip GUI-dependent modules on headless systems (no X11/Wayland)
+
+**Implementation:**
+
+```sh
+# In helpers.sh
+has_gui() {
+  if is_macos; then return 0; fi
+  case "$XDG_SESSION_TYPE" in
+    x11|wayland) return 0 ;;
+  esac
+  [ -n "$DISPLAY" ] && return 0
+  return 1
+}
+
+is_headless() {
+  if has_gui; then return 1; else return 0; fi
+}
+```
+
+**Detection Strategy:**
+- macOS: always returns GUI present (Aqua)
+- Linux: checks `$XDG_SESSION_TYPE` (systemd/elogind), falls back to `$DISPLAY`
+- SSH sessions without X forwarding: correctly detected as headless
+
+**GUI Modules:** `fonts`, `flatpak`, `ghostty`, `alacritty`
+
+**Two-Phase Setup:**
+- Phase 1 (headless server): `sh setup.sh` auto-skips GUI modules
+- Phase 2 (after adding desktop): `sh setup.sh fonts flatpak ghostty` installs GUI modules
+- Each GUI module also has an internal guard: `if is_headless; then return 0; fi`
+
+**Pattern Details:**
+- `DOTFILES_HAS_GUI` exported and persisted to `~/.dotfilesrc`
+- Full setup loop checks `GUI_MODULES` list and skips matching modules
+- Module-level guards provide defense-in-depth for selective invocations

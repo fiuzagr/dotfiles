@@ -1,5 +1,10 @@
 #!/usr/bin/env sh
 
+if is_headless; then
+  log 'No GUI detected. Skipping fonts...'
+  return 0
+fi
+
 if is_macos; then
   FONTS_DIR="$HOME/Library/Fonts"
 else

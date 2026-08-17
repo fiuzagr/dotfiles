@@ -9,17 +9,25 @@ Cross-platform shell-based dotfiles for macOS & Linux. POSIX sh only. Idempotent
 ### Commands
 
 ```bash
-sh setup.sh                    # Full setup
+sh setup.sh                    # Full setup (auto-detects GUI)
 sh setup.sh <module1> <module2> # Selective setup
 sh test.sh                      # Run tests
 ```
 
+### Two-Phase Setup (Headless Servers)
+
+On headless systems (no X11/Wayland), GUI modules are automatically skipped:
+
+- **Phase 1:** `sh setup.sh` — installs all CLI/TUI modules
+- **Phase 2:** After adding a desktop, `sh setup.sh fonts flatpak ghostty` — installs GUI modules
+
 ### Modules
 
 **System:** base, shell, local, fonts, homebrew
-**Development:** git, nvim, node, rustup, uv, docker
+**Development:** git, nvim, node, rustup, uv, docker, build-tools
 **Terminal:** terminal-tools, tmux, ghostty
-**Optional:** opencode, devtoys, flatpak, android, gpg, ssh
+**GUI (skipped on headless):** fonts, flatpak, ghostty, alacritty
+**Optional:** opencode, devtoys, android, gpg, ssh
 
 ---
 

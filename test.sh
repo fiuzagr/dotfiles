@@ -51,6 +51,26 @@ else
   exit 1
 fi
 
+# Test has_gui and is_headless
+echo "Testing has_gui and is_headless..."
+if has_gui; then
+  echo "✓ has_gui returned success (GUI detected)"
+  if is_headless; then
+    echo "✗ is_headless should fail when GUI is present"
+    exit 1
+  else
+    echo "✓ is_headless correctly failed when GUI present"
+  fi
+else
+  echo "✓ has_gui returned failure (headless)"
+  if is_headless; then
+    echo "✓ is_headless correctly succeeded when headless"
+  else
+    echo "✗ is_headless should succeed when headless"
+    exit 1
+  fi
+fi
+
 # Test to_zshrc
 echo "Testing to_zshrc..."
 TEST_ZSHRC="/tmp/test_zshrc_$$"

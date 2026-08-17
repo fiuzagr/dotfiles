@@ -1,5 +1,10 @@
 #!/usr/bin/env sh
 
+if is_headless; then
+  log 'No GUI detected. Skipping flatpak...'
+  return 0
+fi
+
 if is_macos; then
   log 'Flatpak is not available on macOS. Skipping...'
   return 0
