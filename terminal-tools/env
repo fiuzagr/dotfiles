@@ -1,25 +1,23 @@
 #!/usr/bin/env sh
 
-eval "$(starship init "$DOTFILES_SHELL")"
+if [ -n "${BASH_VERSION:-}" ] || [ -n "${ZSH_VERSION:-}" ]; then
+  eval "$(starship init "$DOTFILES_SHELL")"
 
-eval "$(atuin init "$DOTFILES_SHELL")"
+  eval "$(atuin init "$DOTFILES_SHELL")"
 
-export CARAPACE_BRIDGES="zsh,fish,bash,inshellisense"
-# shellcheck disable=SC1090
-case "$DOTFILES_SHELL" in
-bash) eval "$(carapace _carapace)" ;;
-zsh) eval "$(carapace _carapace zsh)" ;;
-esac
+  export CARAPACE_BRIDGES="zsh,fish,bash,inshellisense"
+  case "$DOTFILES_SHELL" in
+    bash) eval "$(carapace _carapace)" ;;
+    zsh) eval "$(carapace _carapace zsh)" ;;
+  esac
 
-eval "$(direnv hook "$DOTFILES_SHELL")"
-[ -s "$HOME/.envrc" ] && . "$HOME/.envrc"
+  eval "$(direnv hook "$DOTFILES_SHELL")"
+  [ -s "$HOME/.envrc" ] && . "$HOME/.envrc"
 
-case "$DOTFILES_SHELL" in
-bash) eval "$(fzf --bash)" ;;
-zsh) eval "$(fzf --zsh)" ;;
-esac
+  case "$DOTFILES_SHELL" in
+    bash) eval "$(fzf --bash)" ;;
+    zsh) eval "$(fzf --zsh)" ;;
+  esac
 
-#PATH="$(brew --prefix uutils-coreutils)/libexec/uubin:$PATH"
-#export PATH
-
-eval "$(zoxide init "$DOTFILES_SHELL")"
+  eval "$(zoxide init "$DOTFILES_SHELL")"
+fi

@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
 
-eval "$(uv generate-shell-completion "$DOTFILES_SHELL")"
-eval "$(uvx --generate-shell-completion "$DOTFILES_SHELL")"
+if [ -n "${BASH_VERSION:-}" ] || [ -n "${ZSH_VERSION:-}" ]; then
+  eval "$(uv generate-shell-completion "$DOTFILES_SHELL")"
+  eval "$(uvx --generate-shell-completion "$DOTFILES_SHELL")"
+fi
