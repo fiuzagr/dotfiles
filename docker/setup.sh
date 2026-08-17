@@ -12,7 +12,7 @@ if is_headless; then
     log "Added $(whoami) to docker group — re-login required"
   fi
 
-  sudo brew services start docker-engine
+  sudo --preserve-env=HOME "$(brew --prefix)/bin/brew" services start docker-engine
 
   mkdir -p "$HOME/.docker"
   DOCKER_CONFIG="$HOME/.docker/config.json"
