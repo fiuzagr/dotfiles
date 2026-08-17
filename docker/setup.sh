@@ -12,8 +12,18 @@ if is_headless; then
     log "Added $(whoami) to docker group — re-login required"
   fi
 
-  timeout 30 sudo --preserve-env=HOME "$(brew --prefix)/bin/brew" services start docker-engine || \
-    log "Warning: docker-engine service start timed out — run manually: sudo brew services start docker-engine"
+  sudo --preserve-env=HOME "$(brew --prefix)/bin/brew" services start docker-engine &
+  _ds_pid=$!
+  _ds_wait=0
+  while kill -0 "$_ds_pid" 2>/dev/null && [ "$_ds_wait" -lt 30 ]; do
+    sleep 1
+    _ds_wait=$((_ds_wait + 1))
+  done
+  if kill -0 "$_ds_pid" 2>/dev/null; then
+    sudo kill "$_ds_pid" 2>/dev/null || true
+    log "Warning: docker-engine service start timed out"
+    log "Run manually: sudo brew services start docker-engine"
+  fi
 
   mkdir -p "$HOME/.docker"
   DOCKER_CONFIG="$HOME/.docker/config.json"
