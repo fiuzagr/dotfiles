@@ -2,9 +2,11 @@
 
 if [ -f "$HOME/.ssh/id_rsa" ]; then
   if is_macos; then
-    copy_cmd="< ~/.ssh/id_rsa.pub tee /dev/tty | pbcopy"
+    copy_cmd="pbcopy < ~/.ssh/id_rsa.pub"
+  elif is_headless; then
+    copy_cmd="cat ~/.ssh/id_rsa.pub"
   else
-    copy_cmd="< ~/.ssh/id_rsa.pub tee /dev/tty | xclip -selection clipboard"
+    copy_cmd="xclip -selection clipboard < ~/.ssh/id_rsa.pub"
   fi
 
   log "--------------------------------------------------------------------"
@@ -13,12 +15,17 @@ if [ -f "$HOME/.ssh/id_rsa" ]; then
   log "--------------------------------------------------------------------"
 else
   ssh-keygen -t rsa -b 4096 -N "" -f "$HOME/.ssh/id_rsa"
-  <"$HOME/.ssh/id_rsa.pub" tee /dev/tty | copy_to_clipboard
+
+  if ! is_headless; then
+    <"$HOME/.ssh/id_rsa.pub" tee /dev/tty | copy_to_clipboard
+  fi
 
   if is_macos; then
-    copy_cmd="< ~/.ssh/id_rsa.pub tee /dev/tty | pbcopy"
+    copy_cmd="pbcopy < ~/.ssh/id_rsa.pub"
+  elif is_headless; then
+    copy_cmd="cat ~/.ssh/id_rsa.pub"
   else
-    copy_cmd="< ~/.ssh/id_rsa.pub tee /dev/tty | xclip -selection clipboard"
+    copy_cmd="xclip -selection clipboard < ~/.ssh/id_rsa.pub"
   fi
 
   log "--------------------------------------------------------------------"
