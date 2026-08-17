@@ -7,7 +7,7 @@
       "model": "openrouter/z-ai/glm-5.1"
     },
     "plan": {
-      "model": "openrouter/z-ai/glm-5.1"
+      "model": "openrouter/z-ai/glm-5.2"
     }
   },
   "mcp": {
@@ -30,6 +30,22 @@
     "gh_grep": {
       "type": "remote",
       "url": "https://mcp.grep.app"
+    },
+    "serena": {
+      "type": "local",
+      "command": [
+        "uvx",
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena",
+        "start-mcp-server",
+        "--project-from-cwd",
+        "--context",
+        "agent",
+        "--open-web-dashboard",
+        "False"
+      ],
+      "enabled": true
     }
   },
   "plugin": [],

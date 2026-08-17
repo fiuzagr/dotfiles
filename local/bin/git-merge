@@ -2,7 +2,7 @@
 
 set -eu
 
-LOG_FILE="$HOME/.local/var/logs/git-force.log"
+LOG_FILE="$HOME/.local/var/logs/git-merge.log"
 
 git_cmd() {
   if ! git "$@" >>"$LOG_FILE" 2>&1; then
@@ -13,28 +13,35 @@ git_cmd() {
 }
 
 main() {
-  branch="${1:?Usage: git-force <branch>}"
+  branch="${1:?Usage: git-merge <branch>}"
+  current=$(git rev-parse --abbrev-ref HEAD)
 
   if [ "$branch" = "main" ] || [ "$branch" = "master" ]; then
     echo "Do not use main or master branch" >&2
     exit 1
   fi
 
+  if [ "$current" = "HEAD" ]; then
+    echo "Cannot merge from detached HEAD" >&2
+    exit 1
+  fi
+
   mkdir -p "$(dirname "$LOG_FILE")"
 
   echo "--------------------------------"
-  echo "Overwriting the branch: $branch"
+  echo "Merging the branches: $branch - $current"
 
   (
     git_cmd fetch origin
     { git branch -D "$branch" || true; }
-    git_cmd checkout -b "$branch"
-    git_cmd push -f -u origin "$branch"
+    git_cmd checkout "$branch"
+    git_cmd pull --ff-only
+    git_cmd merge "$current" --no-edit
+    git_cmd push -u origin "$branch"
     git_cmd checkout -
   ) || {
     echo "An error occurred while managing branch $branch" >&2
     echo "Check log file: $LOG_FILE" >&2
-    git checkout - >>"$LOG_FILE" 2>&1 || true
     exit 1
   }
 

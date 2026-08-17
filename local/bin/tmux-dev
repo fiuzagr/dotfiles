@@ -33,7 +33,7 @@ if ! tmux -L "$project_owner" has-session -t "=$project_dir" 2>/dev/null; then
   tmux -L "$project_owner" new-window -t "$project_dir":3 -n AI
 
   tmux -L "$project_owner" send-keys -t "$project_dir":0.0 "cd ${PWD}" C-m
-  tmux -L "$project_owner" send-keys -t "$project_dir":1.0 "cd ${PWD} && nvim" C-m
+  tmux -L "$project_owner" send-keys -t "$project_dir":1.0 "cd ${PWD}" C-m
   tmux -L "$project_owner" send-keys -t "$project_dir":2.0 "cd ${PWD}" C-m
   tmux -L "$project_owner" send-keys -t "$project_dir":3.0 "cd ${PWD}" C-m
 
