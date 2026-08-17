@@ -125,6 +125,13 @@ for MODULE in $MODULES; do
     log_error "Module '$MODULE' setup failed." "$LOG_FILE"
     exit 1
   fi
+
+  # Source module's env file into parent shell so subsequent
+  # modules inherit exported variables (e.g. brew PATH from homebrew)
+  if [ -f "$DOTFILES_PATH/$MODULE/env" ]; then
+    # shellcheck disable=SC1090
+    . "$DOTFILES_PATH/$MODULE/env"
+  fi
 done
 IFS=$save_IFS
 
