@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
-brew install git
-brew install gh
+brew_install git
+brew_install gh
 
 touch "$HOME/.gitconfig"
 

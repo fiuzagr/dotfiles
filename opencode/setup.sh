@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
-brew install oven-sh/bun/bun
-brew install anomalyco/tap/opencode
+brew_install oven-sh/bun/bun
+brew_install anomalyco/tap/opencode
 
 # if is_macos; then
 #   brew tap nguyenphutrong/tap

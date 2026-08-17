@@ -10,7 +10,7 @@ sdk install java 17-zulu
 sdk default java 17-zulu
 
 # base (cmdline-tools + sdkmanager)
-brew install --cask android-commandlinetools
+brew_install --cask android-commandlinetools
 
 . "$DOTFILES_PATH/android/env"
 to_dotfilesrc ". \"\$DOTFILES_PATH/android/env\""

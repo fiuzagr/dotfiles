@@ -1,8 +1,8 @@
 #!/usr/bin/env sh
 
 if is_headless; then
-  brew install docker docker-buildx docker-compose docker-engine
-  brew install yq
+  brew_install docker docker-buildx docker-compose docker-engine
+  brew_install yq
 
   if ! getent group docker >/dev/null 2>&1; then
     sudo groupadd docker
@@ -25,5 +25,5 @@ if is_headless; then
   yq -i ".cliPluginsExtraDirs = ((.cliPluginsExtraDirs // []) + [\"$PLUGINS_DIR\"]) | .cliPluginsExtraDirs |= unique" "$DOCKER_CONFIG"
   log "Configured Docker cliPluginsExtraDirs: $PLUGINS_DIR"
 else
-  brew install --cask docker-desktop
+  brew_install --cask docker-desktop
 fi

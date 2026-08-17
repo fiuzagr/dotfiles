@@ -3,7 +3,7 @@
 if gpg --list-secret-keys | grep -q "sec"; then
   log 'GPG key already generated. Skipping...'
 else
-  brew install gnupg
+  brew_install gnupg
 
   log 'Generating a new GPG key...'
   log

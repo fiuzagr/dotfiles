@@ -5,4 +5,4 @@ if is_headless; then
   return 0
 fi
 
-brew install --cask devtoys
+brew_install --cask devtoys

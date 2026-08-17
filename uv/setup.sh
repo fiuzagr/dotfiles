@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
 
-brew install uv
+brew_install uv
 
 to_dotfilesrc ". \"\$DOTFILES_PATH/uv/env\""

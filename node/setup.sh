@@ -2,9 +2,9 @@
 
 mkdir -p "$HOME/.nvm"
 
-brew install nvm
-brew install deno
-brew install oven-sh/bun/bun
+brew_install nvm
+brew_install deno
+brew_install oven-sh/bun/bun
 
 . "$DOTFILES_PATH/node/env"
 to_dotfilesrc ". \"\$DOTFILES_PATH/node/env\""

@@ -10,6 +10,6 @@ if is_macos; then
   return 0
 fi
 
-brew install flatpak
+brew_install flatpak
 
 flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo

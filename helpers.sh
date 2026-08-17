@@ -354,3 +354,25 @@ install_system_packages() {
   esac
 }
 
+# Install Homebrew formulae with pseudo-TTY support for non-interactive environments
+# Prevents "Broken pipe" errors when stdout is redirected to a file (e.g. on Linux)
+# Usage: brew_install cmake pkg-config python3
+# Usage: brew_install --cask ghostty
+# Usage: brew_install oven-sh/bun/bun
+brew_install() {
+  if [ $# -eq 0 ]; then
+    echo "Error: brew_install requires at least one argument" >&2
+    return 1
+  fi
+
+  if [ -t 1 ] || is_macos; then
+    brew install "$@"
+  else
+    cmd="brew install"
+    for arg in "$@"; do
+      cmd="$cmd '$arg'"
+    done
+    script -qec "$cmd" /dev/null
+  fi
+}
+

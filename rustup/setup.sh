@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-brew install rustup
+brew_install rustup
 
 rustup update stable
 rustup default stable
