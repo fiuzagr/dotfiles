@@ -6,7 +6,7 @@ if is_linux; then
   pm=$(get_package_manager)
   case "$pm" in
     apt)
-      install_system_packages build-essential procps-ng curl file git
+      install_system_packages build-essential procps curl file git
       ;;
     pacman)
       install_system_packages base-devel procps-ng curl file git
