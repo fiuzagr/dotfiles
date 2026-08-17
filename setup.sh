@@ -65,7 +65,7 @@ if [ $# -eq 0 ]; then
 
   # the order here matters!
   MODULES="base homebrew build-tools shell local fonts flatpak node rustup uv ssh gpg git terminal-tools tmux nvim ghostty docker"
-  GUI_MODULES="fonts flatpak ghostty alacritty"
+  GUI_MODULES="fonts flatpak ghostty alacritty devtoys"
 
   log
   log "$(hr)"

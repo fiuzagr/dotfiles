@@ -8,11 +8,13 @@ brew install cmake pkg-config python3 stow unzip wget
 
 # Platform-specific tools
 if is_linux; then
-  # Clipboard tools for Linux
-  brew install xsel xclip
+  if ! is_headless; then
+    # Clipboard tools for Linux (require X11)
+    brew install xsel xclip
 
-  # X11 and graphics libraries for GUI development
-  brew install freetype fontconfig libxcb libxkbcommon
+    # X11 and graphics libraries for GUI development
+    brew install freetype fontconfig libxcb libxkbcommon
+  fi
 elif is_macos; then
   # macOS has native clipboard support, skip xsel/xclip
   # Homebrew handles graphics dependencies automatically on macOS

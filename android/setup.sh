@@ -17,7 +17,9 @@ to_dotfilesrc ". \"\$DOTFILES_PATH/android/env\""
 
 # build-tools
 sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
-# emulador + imagem (só se for usar emulador):
-sdkmanager --install "emulator" "system-images;android-36;google_apis;arm64-v8a"
 # NDK (só se compilar código nativo):
-sdkmanager --install "ndk;27.0.12077973"
+sdkmanager --install "ndk;27.0.[REDACTED]"
+# emulador + imagem (GUI only):
+if ! is_headless; then
+  sdkmanager --install "emulator" "system-images;android-36;google_apis;arm64-v8a"
+fi

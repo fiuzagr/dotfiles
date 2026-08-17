@@ -220,7 +220,7 @@ All modules are located in `~/.dotfiles/[module-name]/` with a `setup.sh` script
 | **node** | Node.js, npm, nvm setup | `sh setup.sh node` |
 | **rustup** | Rust toolchain | `sh setup.sh rustup` |
 | **uv** | Python package manager | `sh setup.sh uv` |
-| **docker** | Docker Desktop | `sh setup.sh docker` |
+| **docker** | Docker (Desktop on GUI, CLI+engine on headless) | `sh setup.sh docker` |
 
 ### Terminal & Tools
 
@@ -238,14 +238,14 @@ All modules are located in `~/.dotfiles/[module-name]/` with a `setup.sh` script
 | **flatpak** | Flatpak container system (Linux) | `sh setup.sh flatpak` |
 | **ghostty** | Ghostty terminal config | `sh setup.sh ghostty` |
 | **alacritty** | Alacritty terminal config | `sh setup.sh alacritty` |
+| **devtoys** | Developer utility tools | `sh setup.sh devtoys` |
 
 ### Optional/Specialized
 
 | Module | Purpose | Install Command |
 |--------|---------|-----------------|
 | **opencode** | OpenCode AI agent + skills | `sh setup.sh opencode` |
-| **devtoys** | Developer utility tools | `sh setup.sh devtoys` |
-| **android** | Android SDK & tools | `sh setup.sh android` |
+| **android** | Android SDK & tools (emulator skipped on headless) | `sh setup.sh android` |
 | **gpg** | GPG/PGP encryption | `sh setup.sh gpg` |
 | **ssh** | SSH configuration | `sh setup.sh ssh` |
 

@@ -26,8 +26,8 @@ On headless systems (no X11/Wayland), GUI modules are automatically skipped:
 **System:** base, shell, local, fonts, homebrew
 **Development:** git, nvim, node, rustup, uv, docker, build-tools
 **Terminal:** terminal-tools, tmux, ghostty
-**GUI (skipped on headless):** fonts, flatpak, ghostty, alacritty
-**Optional:** opencode, devtoys, android, gpg, ssh
+**GUI (skipped on headless):** fonts, flatpak, ghostty, alacritty, devtoys
+**Optional:** opencode, android, gpg, ssh
 
 ---
 

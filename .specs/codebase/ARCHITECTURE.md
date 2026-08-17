@@ -267,7 +267,7 @@ is_headless() {
 - Linux: checks `$XDG_SESSION_TYPE` (systemd/elogind), falls back to `$DISPLAY`
 - SSH sessions without X forwarding: correctly detected as headless
 
-**GUI Modules:** `fonts`, `flatpak`, `ghostty`, `alacritty`
+**GUI Modules:** `fonts`, `flatpak`, `ghostty`, `alacritty`, `devtoys`
 
 **Two-Phase Setup:**
 - Phase 1 (headless server): `sh setup.sh` auto-skips GUI modules
@@ -278,3 +278,11 @@ is_headless() {
 - `DOTFILES_HAS_GUI` exported and persisted to `~/.dotfilesrc`
 - Full setup loop checks `GUI_MODULES` list and skips matching modules
 - Module-level guards provide defense-in-depth for selective invocations
+
+### 6. Dual-Mode Modules (GUI vs Headless)
+
+**Modules that adapt behavior based on GUI availability:**
+
+- **docker**: installs Docker Desktop (`brew --cask`) on GUI, Docker CLI + engine + buildx + compose on headless
+- **android**: installs cmdline-tools, platform-tools, build-tools, NDK on all systems; skips emulator + system-images on headless
+- **build-tools**: skips `xsel`/`xclip` (clipboard) and X11/graphics libs (`freetype`, `fontconfig`, `libxcb`, `libxkbcommon`) on headless Linux
