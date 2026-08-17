@@ -376,3 +376,19 @@ brew_install() {
   fi
 }
 
+# Run a script in bash after sourcing an env file
+# For tools that require bash (nvm, etc.) which cannot run in POSIX sh
+# Usage: run_in_bash <env_file> <script>
+# Example: run_in_bash "$DOTFILES_PATH/node/env" "nvm install --lts && nvm use default"
+run_in_bash() {
+  _rib_env_file="$1"
+  _rib_script="$2"
+  bash -c '
+    set -e
+    if [ -f "$1" ]; then
+      . "$1"
+    fi
+    eval "$2"
+  ' run_in_bash "$_rib_env_file" "$_rib_script"
+}
+
