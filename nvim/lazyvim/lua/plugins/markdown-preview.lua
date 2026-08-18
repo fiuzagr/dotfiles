@@ -11,6 +11,5 @@ return {
       })
     end,
     ft = "markdown",
-    build = ":call mkdp#util#install()",
   },
 }
