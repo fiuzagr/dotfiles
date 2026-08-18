@@ -14,5 +14,5 @@ brew_install anomalyco/tap/opencode
 
 create_symlink "$DOTFILES_PATH/opencode/config" "$HOME/.config/opencode"
 
-uv tool install --python 3.13 "headroom-ai[proxy,ml,code,mcp]"
-create_symlink "$DOTFILES_PATH/opencode/bin/hopencode" "$HOME/.local/bin/hopencode"
+# uv tool install --python 5.13 "headroom-ai[proxy,ml,code,mcp]"
+# create_symlink "$DOTFILES_PATH/opencode/bin/hopencode" "$HOME/.local/bin/hopencode"
