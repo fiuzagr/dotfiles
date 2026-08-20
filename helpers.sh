@@ -356,6 +356,7 @@ install_system_packages() {
 
 # Install Homebrew formulae with pseudo-TTY support for non-interactive environments
 # Prevents "Broken pipe" errors when stdout is redirected to a file (e.g. on Linux)
+# Automatically taps and trusts third-party taps when using user/tap/formula format
 # Usage: brew_install cmake pkg-config python3
 # Usage: brew_install --cask ghostty
 # Usage: brew_install oven-sh/bun/bun
@@ -364,6 +365,25 @@ brew_install() {
     echo "Error: brew_install requires at least one argument" >&2
     return 1
   fi
+
+  # Ensure third-party taps are tapped and trusted
+  bi_is_cask=0
+  for bi_arg in "$@"; do
+    case "$bi_arg" in
+      --cask) bi_is_cask=1; continue ;;
+      --*) continue ;;
+    esac
+    # Detect user/tap/formula format (3 segments separated by /)
+    bi_tap=$(echo "$bi_arg" | awk -F/ '{if(NF==3) print $1"/"$2}')
+    if [ -n "$bi_tap" ]; then
+      brew tap "$bi_tap" 2>/dev/null || true
+      if [ $bi_is_cask -eq 1 ]; then
+        brew trust --cask "$bi_arg" 2>/dev/null || true
+      else
+        brew trust --formula "$bi_arg" 2>/dev/null || true
+      fi
+    fi
+  done
 
   if [ -t 1 ] || is_macos; then
     brew install "$@"
