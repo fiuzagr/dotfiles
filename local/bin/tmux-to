@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+
+target="$1"
+
+if [ -z "$target" ]; then
+  echo "uso: tmux-to SOCKET/SESSION"
+  exit 1
+fi
+
+socket="${target%%/*}"
+session="${target#*/}"
+
+if [ "$socket" = "$session" ]; then
+  echo "uso: tmux-to SOCKET/SESSION"
+  exit 1
+fi
+
+if [ -n "$TMUX" ]; then
+  tmux detach-client -E "tmux -L '$socket' attach-session -t '$socket/$session'"
+else
+  exec tmux -L "$socket" attach-session -t "$socket/$session"
+fi
