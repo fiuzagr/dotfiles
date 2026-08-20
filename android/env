@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 
+# Android SDK
 ANDROID_HOME="$(brew --prefix)/share/android-commandlinetools"
 ANDROID_USER_HOME="$HOME/.android"
 

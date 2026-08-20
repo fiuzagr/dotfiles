@@ -1,6 +1,11 @@
 #!/usr/bin/env sh
 
-brew_install --cask temurin@17
+# Verify Java is available (installed by java module)
+if ! command -v java >/dev/null 2>&1; then
+  echo "Error: Java is not installed. Run 'sh setup.sh java' first." >&2
+  exit 1
+fi
+log "Java version: $(java -version 2>&1 | head -1)"
 
 # base (cmdline-tools + sdkmanager)
 brew_install --cask android-commandlinetools

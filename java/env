@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+
+# jenv - Java version manager
+export PATH="$HOME/.jenv/bin:$PATH"
+if [ -n "${BASH_VERSION:-}" ] || [ -n "${ZSH_VERSION:-}" ]; then
+  eval "$(jenv init -)"
+fi
+
+# JAVA_HOME via jenv (fallback to brew openjdk@17 if jenv not ready)
+if command -v jenv >/dev/null 2>&1 && [ -d "$HOME/.jenv/versions" ]; then
+  export JAVA_HOME="$(jenv prefix 2>/dev/null)"
+fi
+if [ -z "$JAVA_HOME" ] || [ ! -d "$JAVA_HOME" ]; then
+  export JAVA_HOME="$(brew --prefix openjdk@17)"
+fi
+
+export PATH
