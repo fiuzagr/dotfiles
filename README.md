@@ -180,12 +180,16 @@ exec $SHELL
 
 After initial setup, you can:
 
-**Re-run full setup** (idempotent - safe to run multiple times):
+**Update dotfiles** (pull latest changes and optionally re-run setup):
 ```shell
-sh ~/.dotfiles/setup.sh
+dotfiles update
 ```
 
-**Run setup from anywhere** (via alias created by setup):
+This fetches and pulls the latest changes from the remote repository
+(`--ff-only` — aborts if the branch has diverged). After pulling, it
+prompts whether to re-run the full setup to apply any changes.
+
+**Re-run full setup** (idempotent - safe to run multiple times):
 ```shell
 dotfiles
 ```

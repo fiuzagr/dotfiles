@@ -29,6 +29,61 @@ exec 1>>"$LOG_FILE" 2>&1
 
 . "$DOTFILES_PATH/helpers.sh"
 
+dotfiles_update() {
+  log
+  log "$(hr)"
+  log "$(a bold 'Updating dotfiles...')"
+  log "$(hr)"
+
+  if ! git -C "$DOTFILES_PATH" rev-parse --git-dir \
+    >/dev/null 2>&1; then
+    log_error "Not a git repository: $DOTFILES_PATH"
+    exit 1
+  fi
+
+  if [ -n "$(git -C "$DOTFILES_PATH" status --porcelain)" ]; then
+    log_error "Local changes in $DOTFILES_PATH. Commit or stash first."
+    exit 1
+  fi
+
+  log "Fetching latest changes..."
+  if ! git -C "$DOTFILES_PATH" fetch origin >&3 2>&3; then
+    log_error "Failed to fetch from remote."
+    exit 1
+  fi
+
+  log "Pulling (fast-forward only)..."
+  if ! git -C "$DOTFILES_PATH" pull --ff-only >&3 2>&3; then
+    log_error "Pull failed — branch diverged. Resolve manually."
+    exit 1
+  fi
+
+  git -C "$DOTFILES_PATH" submodule update --init --recursive \
+    2>/dev/null || true
+
+  log
+  log "$(fgc green)$(e check) Dotfiles updated!$(fgc end)"
+  log
+  printf "Re-run full setup now? [y/N]: " >&3
+  read -r du_choice || true
+  case "$du_choice" in
+  y | Y)
+    log "Re-running full setup..."
+    exec 2>&4 1>&3
+    exec sh "$DOTFILES_PATH/setup.sh"
+    ;;
+  *)
+    log "Run 'dotfiles' manually when ready."
+    exit 0
+    ;;
+  esac
+}
+
+if [ $# -gt 0 ] && [ "$1" = "update" ]; then
+  dotfiles_update
+  exit $?
+fi
+
 # Export OS, shell, and GUI detection
 DOTFILES_OS=$(get_os)
 export DOTFILES_OS

@@ -3,6 +3,8 @@
 DOTFILES_PATH="$(cd -P -- "$(dirname -- "${0}")" && printf '%s\n' "$(pwd -P)")"
 export DOTFILES_PATH
 
+exec 3>&1 4>&2
+
 . "$DOTFILES_PATH/helpers.sh"
 
 to_bashrc 'apple=banana'
@@ -207,6 +209,62 @@ else
   echo "✗ llm --debug flag failed to show debug output"
   exit 1
 fi
+
+echo ""
+
+# Test dotfiles update validation
+echo "Testing dotfiles update validation..."
+
+# Test: non-git directory is rejected
+echo "Testing non-git directory rejection..."
+DU_NONGIT_DIR="/tmp/dotfiles_nongit_test_$$"
+mkdir -p "$DU_NONGIT_DIR"
+if git -C "$DU_NONGIT_DIR" rev-parse --git-dir >/dev/null 2>&1; then
+  echo "✗ Non-git directory should fail git check"
+  rm -rf "$DU_NONGIT_DIR"
+  exit 1
+fi
+echo "✓ Non-git directory correctly rejected"
+rm -rf "$DU_NONGIT_DIR"
+
+# Test: git repo with local changes is detected
+echo "Testing dirty repo detection..."
+DU_DIRTY_REPO="/tmp/dotfiles_dirty_test_$$"
+mkdir -p "$DU_DIRTY_REPO"
+git -C "$DU_DIRTY_REPO" init -q
+git -C "$DU_DIRTY_REPO" config user.email "[EMAIL]"
+git -C "$DU_DIRTY_REPO" config user.name "Test"
+git -C "$DU_DIRTY_REPO" config commit.gpgsign false
+echo "test" >"$DU_DIRTY_REPO/file.txt"
+git -C "$DU_DIRTY_REPO" add file.txt
+git -C "$DU_DIRTY_REPO" commit -qm "initial"
+echo "modified" >"$DU_DIRTY_REPO/file.txt"
+if [ -z "$(git -C "$DU_DIRTY_REPO" status --porcelain)" ]; then
+  echo "✗ Dirty repo should be detected"
+  rm -rf "$DU_DIRTY_REPO"
+  exit 1
+fi
+echo "✓ Dirty repo correctly detected"
+rm -rf "$DU_DIRTY_REPO"
+
+# Test: clean git repo passes dirty check
+echo "Testing clean repo passes dirty check..."
+DU_CLEAN_REPO="/tmp/dotfiles_clean_test_$$"
+mkdir -p "$DU_CLEAN_REPO"
+git -C "$DU_CLEAN_REPO" init -q
+git -C "$DU_CLEAN_REPO" config user.email "[EMAIL]"
+git -C "$DU_CLEAN_REPO" config user.name "Test"
+git -C "$DU_CLEAN_REPO" config commit.gpgsign false
+echo "test" >"$DU_CLEAN_REPO/file.txt"
+git -C "$DU_CLEAN_REPO" add file.txt
+git -C "$DU_CLEAN_REPO" commit -qm "initial"
+if [ -n "$(git -C "$DU_CLEAN_REPO" status --porcelain)" ]; then
+  echo "✗ Clean repo should pass dirty check"
+  rm -rf "$DU_CLEAN_REPO"
+  exit 1
+fi
+echo "✓ Clean repo correctly passes dirty check"
+rm -rf "$DU_CLEAN_REPO"
 
 echo ""
 echo "All tests passed!"
