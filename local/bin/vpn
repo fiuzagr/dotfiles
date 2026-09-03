@@ -1,0 +1,224 @@
+#!/usr/bin/env sh
+
+set -ae
+
+VPN_DNS="\"10.2.0.1\""
+FALLBACK_DNS="\"1.1.1.1\",\"8.8.8.8\""
+HANDSHAKE_TIMEOUT=30
+HANDSHAKE_INTERVAL=2
+
+log() {
+  echo "$*" >&2
+  return
+}
+
+validate_env() {
+  missing=""
+  for var in OPNSENSE_URL OPNSENSE_API_KEY OPNSENSE_API_SECRET \
+    PIHOLE_URL PIHOLE_PASSWORD \
+    WG_INSTANCE_UUID WG_RULE_UUID; do
+    eval "val=\"\$$var\""
+    if [ -z "$val" ]; then
+      missing="$missing $var"
+    fi
+  done
+
+  if [ -n "$missing" ]; then
+    log "Error: missing environment variables:$missing"
+    exit 1
+  fi
+}
+
+opnsense_get() {
+  curl -s -k -u "$OPNSENSE_API_KEY:$OPNSENSE_API_SECRET" \
+    "$OPNSENSE_URL/api/$1"
+}
+
+opnsense_post() {
+  op_path="$1"
+  op_data="${2:-}"
+
+  if [ -n "$op_data" ]; then
+    curl -s -k -u "$OPNSENSE_API_KEY:$OPNSENSE_API_SECRET" \
+      -X POST \
+      -H "Content-Type: application/json" \
+      -d "$op_data" \
+      "$OPNSENSE_URL/api/$op_path"
+  else
+    curl -s -k -u "$OPNSENSE_API_KEY:$OPNSENSE_API_SECRET" \
+      -X POST \
+      "$OPNSENSE_URL/api/$op_path"
+  fi
+}
+
+pihole_auth() {
+  pa_response=$(curl -s -X POST \
+    -H "Content-Type: application/json" \
+    -d "{\"password\":\"$PIHOLE_PASSWORD\"}" \
+    "$PIHOLE_URL/api/auth")
+
+  PIHOLE_SID=$(echo "$pa_response" | sed -n 's/.*"sid":"\([^"]*\)".*/\1/p')
+
+  if [ -z "$PIHOLE_SID" ]; then
+    log "Error: Pi-Hole authentication failed"
+    exit 1
+  fi
+}
+
+pihole_patch() {
+  pp_path="$1"
+  pp_data="$2"
+
+  curl -s -H "sid: $PIHOLE_SID" \
+    -X PATCH \
+    -H "Content-Type: application/json" \
+    -d "$pp_data" \
+    "$PIHOLE_URL/api/$pp_path?restart=true"
+}
+
+pihole_logout() {
+  curl -s -H "sid: $PIHOLE_SID" -X DELETE \
+    "$PIHOLE_URL/api/auth" >/dev/null 2>&1
+  return
+}
+
+get_wg_status() {
+  gw_response=$(opnsense_get "wireguard/server/getServer/$WG_INSTANCE_UUID")
+  if echo "$gw_response" | grep -q '"enabled":"1"'; then
+    echo "on"
+  else
+    echo "off"
+  fi
+}
+
+check_handshake() {
+  ch_response=$(opnsense_get "wireguard/service/show")
+  echo "$ch_response" | grep -q '"peer-status":"online"'
+}
+
+wait_for_handshake() {
+  wh_elapsed=0
+  log "Waiting for WireGuard handshake..."
+
+  while [ "$wh_elapsed" -lt "$HANDSHAKE_TIMEOUT" ]; do
+    if check_handshake; then
+      log "Handshake confirmed (${wh_elapsed}s)"
+      return 0
+    fi
+    sleep "$HANDSHAKE_INTERVAL"
+    wh_elapsed=$((wh_elapsed + HANDSHAKE_INTERVAL))
+  done
+
+  log "Error: handshake timeout after ${HANDSHAKE_TIMEOUT}s"
+  return 1
+}
+
+set_pihole_dns() {
+  sd_upstreams="$1"
+  sd_payload="{\"config\":{\"dns\":{\"upstreams\":[$sd_upstreams]}}}"
+
+  pihole_auth
+  sd_result=$(pihole_patch "config" "$sd_payload")
+
+  if echo "$sd_result" | grep -q '"upstreams"'; then
+    log "Pi-Hole DNS set to: $sd_upstreams"
+  else
+    log "Warning: Pi-Hole DNS update may have failed"
+  fi
+
+  pihole_logout
+  return
+}
+
+toggle_firewall_rule() {
+  tf_state="$1"
+  opnsense_post "firewall/filter/toggleRule/$WG_RULE_UUID/$tf_state" >/dev/null
+  opnsense_post "firewall/filter/apply" >/dev/null
+  return
+}
+
+toggle_wireguard() {
+  tw_state="$1"
+  opnsense_post "wireguard/server/toggleServer/$WG_INSTANCE_UUID" >/dev/null
+  opnsense_post "wireguard/service/reconfigure" >/dev/null
+  return
+}
+
+vpn_on() {
+  log "Turning VPN ON..."
+
+  toggle_wireguard 1
+
+  if ! wait_for_handshake; then
+    log "Rolling back: disabling WireGuard instance"
+    toggle_wireguard 0
+    log "VPN remains OFF. Check ProtonVPN connectivity."
+    exit 1
+  fi
+
+  toggle_firewall_rule 1
+  set_pihole_dns "$VPN_DNS"
+
+  log "VPN ON - all traffic via ProtonVPN"
+}
+
+vpn_off() {
+  log "Turning VPN OFF..."
+
+  toggle_firewall_rule 0
+  toggle_wireguard 0
+  set_pihole_dns "$FALLBACK_DNS"
+
+  log "VPN OFF - traffic via ISP, DNS via $FALLBACK_DNS"
+}
+
+resolve_target() {
+  rt_arg="${1:-}"
+
+  case "$rt_arg" in
+  on)
+    echo "on"
+    ;;
+  off)
+    echo "off"
+    ;;
+  "")
+    rt_current=$(get_wg_status)
+    case "$rt_current" in
+    on)
+      echo "off"
+      ;;
+    off)
+      echo "on"
+      ;;
+    *)
+      log "Error: cannot determine WireGuard status"
+      exit 1
+      ;;
+    esac
+    ;;
+  *)
+    log "Usage: vpn [on|off]"
+    exit 1
+    ;;
+  esac
+}
+
+main() {
+  validate_env
+
+  target=$(resolve_target "${1:-}")
+
+  case "$target" in
+  on)
+    vpn_on
+    ;;
+  off)
+    vpn_off
+    ;;
+  esac
+
+  exit 0
+}
+
+main "$@"

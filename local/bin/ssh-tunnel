@@ -1,0 +1,30 @@
+#!/usr/bin/env sh
+
+set -e
+
+usage() {
+  >&2 echo "Usage: ssh-tunnel <local_port>:<remote_port> <user@host>"
+  >&2 echo ""
+  >&2 echo "Examples:"
+  >&2 echo "  ssh-tunnel 8000:8000 dev@192.168.0.100"
+  >&2 echo "  ssh-tunnel 3000:80 admin@10.0.0.1"
+  exit 1
+}
+
+main() {
+  mapping="${1}"
+  dest="${2}"
+
+  [ -z "${mapping}" ] && usage
+  [ -z "${dest}" ] && usage
+
+  local_port="${mapping%%:*}"
+  remote_port="${mapping##*:}"
+
+  [ -z "${local_port}" ] && usage
+  [ -z "${remote_port}" ] && usage
+
+  ssh -N -L "${local_port}:127.0.0.1:${remote_port}" "${dest}"
+}
+
+main "$@"

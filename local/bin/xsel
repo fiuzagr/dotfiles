@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+set -e
+
+args=""
+for arg in "$@"; do
+  case "$arg" in
+  -b | --clipboard) args="$args -selection clipboard" ;;
+  -p | --primary) args="$args -selection primary" ;;
+  -i | --input) args="$args -i" ;;
+  -o | --output) args="$args -o" ;;
+  -bi) args="$args -selection clipboard -i" ;;
+  -bo) args="$args -selection clipboard -o" ;;
+  -pi) args="$args -selection primary -i" ;;
+  -po) args="$args -selection primary -o" ;;
+  -k | --keep | -x | --clear) ;;
+  -h | --help)
+    echo "Usage: xsel [-b] [-p] [-i] [-o]"
+    exit 0
+    ;;
+  -v | --version)
+    echo "xsel-shim 1.0 (delegates to xclip)"
+    exit 0
+    ;;
+  esac
+done
+
+exec xclip $args

@@ -1,0 +1,137 @@
+#!/usr/bin/env sh
+
+set -ae
+
+VALID_TARGETS="nvim kiro-cli opencode"
+GRACEFUL_WAIT_SECS=2
+
+usage() {
+  cat <<EOF
+Usage: kill-dev [target ...]
+
+Kill running dev tool instances.
+
+Targets:
+  nvim        Neovim (SIGTERM, then SIGKILL)
+  kiro-cli    Kiro CLI (SIGTERM, then SIGKILL)
+  opencode    OpenCode CLI (SIGTERM, then SIGKILL)
+
+Default (no args): kill all targets.
+EOF
+}
+
+pid_in_list() {
+  case " $2 " in
+  *" $1 "*) return 0 ;;
+  esac
+  return 1
+}
+
+get_tree_pids() {
+  gtp_pid="$1"
+  gtp_accum="$2"
+
+  if pid_in_list "$gtp_pid" "$gtp_accum"; then
+    printf '%s' "$gtp_accum"
+    return
+  fi
+
+  gtp_children=$(pgrep -P "$gtp_pid" 2>/dev/null || true)
+
+  for gtp_child in $gtp_children; do
+    gtp_accum=$(get_tree_pids "$gtp_child" "$gtp_accum")
+  done
+
+  if ! pid_in_list "$gtp_pid" "$gtp_accum"; then
+    gtp_accum="$gtp_accum $gtp_pid"
+  fi
+
+  printf '%s' "$gtp_accum"
+}
+
+get_target_pids() {
+  gtp2_name="$1"
+  gtp2_roots=$(pgrep -x "$gtp2_name" 2>/dev/null || true)
+  if [ -z "$gtp2_roots" ]; then
+    return
+  fi
+
+  gtp2_all=""
+  for gtp2_root in $gtp2_roots; do
+    gtp2_all=$(get_tree_pids "$gtp2_root" "$gtp2_all")
+  done
+
+  printf '%s\n' "$gtp2_all"
+}
+
+kill_graceful() {
+  kg_name="$1"
+  kg_pids=$(get_target_pids "$kg_name")
+  if [ -z "$kg_pids" ]; then
+    return 0
+  fi
+
+  for kg_pid in $kg_pids; do
+    kill -TERM "$kg_pid" 2>/dev/null || true
+  done
+
+  kg_elapsed=0
+  while [ "$kg_elapsed" -lt "$GRACEFUL_WAIT_SECS" ]; do
+    kg_remaining=""
+    for kg_pid in $kg_pids; do
+      if kill -0 "$kg_pid" 2>/dev/null; then
+        kg_remaining="$kg_remaining $kg_pid"
+      else
+      echo "killed $kg_name: $kg_pid (killed)"
+      fi
+    done
+    if [ -z "$kg_remaining" ]; then
+      return 0
+    fi
+    kg_pids="$kg_remaining"
+    sleep 1
+    kg_elapsed=$((kg_elapsed + 1))
+  done
+
+  for kg_pid in $kg_pids; do
+    if kill -0 "$kg_pid" 2>/dev/null; then
+      kill -9 "$kg_pid" 2>/dev/null || true
+      echo "killed $kg_name: $kg_pid"
+    fi
+  done
+}
+
+is_valid_target() {
+  for ivt_t in $VALID_TARGETS; do
+    if [ "$1" = "$ivt_t" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+main() {
+  if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    usage
+    exit 0
+  fi
+
+  if [ $# -eq 0 ]; then
+    md_targets="$VALID_TARGETS"
+  else
+    md_targets="$*"
+  fi
+
+  for md_arg in $md_targets; do
+    if ! is_valid_target "$md_arg"; then
+      echo "unknown target: $md_arg" >&2
+      echo "valid targets: $VALID_TARGETS" >&2
+      exit 1
+    fi
+  done
+
+  for md_target in $md_targets; do
+    kill_graceful "$md_target"
+  done
+}
+main "$@"

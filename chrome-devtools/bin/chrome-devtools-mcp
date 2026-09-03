@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+
+exec npx -y chrome-devtools-mcp@latest \
+  --executablePath="$HOME/.local/bin/chromium-mcp-browser" \
+  --headless=true \
+  --isolated=true \
+  "$@"

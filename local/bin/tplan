@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+set -e
+
+main() {
+  file="${1:-/tmp/plan}"
+
+  terraform plan -out "$file"
+}
+main "$@"

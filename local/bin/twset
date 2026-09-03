@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+set -e
+
+main() {
+  workspace="$1"
+
+  terraform workspace select "$workspace"
+}
+main "$@"

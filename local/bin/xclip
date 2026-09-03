@@ -1,0 +1,66 @@
+#!/usr/bin/env sh
+set -e
+
+output=0
+for arg in "$@"; do
+  case "$arg" in
+  -o | -out | -output) output=1 ;;
+  -i | -in | -input) output=0 ;;
+  -v | -version)
+    echo "xclip-shim 1.0 (tmux/x11/osc52)"
+    exit 0
+    ;;
+  -selection) ;;
+  -selection=*) ;;
+  -t | -target) ;;
+  -help | -h)
+    echo "Usage: xclip [-selection clipboard] [-o] [-i]"
+    exit 0
+    ;;
+  -*)
+    echo "xclip-shim: unknown option '$arg'" >&2
+    exit 1
+    ;;
+  esac
+done
+
+if [ -n "$TMUX" ]; then
+  if [ "$output" -eq 1 ]; then
+    tmux save-buffer - 2>/dev/null || true
+  else
+    tmux load-buffer -w - 2>/dev/null || tmux load-buffer -
+  fi
+  exit 0
+fi
+
+if [ -n "$DISPLAY" ]; then
+  for dir in $(printf '%s' "$PATH" | tr ':' '\n'); do
+    [ "$dir" = "$HOME/.local/bin" ] && continue
+    [ -x "$dir/xclip" ] || continue
+    if "$dir/xclip" "$@" 2>/dev/null; then
+      exit 0
+    fi
+    break
+  done
+fi
+
+if [ "$output" -eq 1 ]; then
+  if [ -c /dev/tty ]; then
+    saved=$(stty -g </dev/tty 2>/dev/null) || exit 1
+    stty raw -echo </dev/tty 2>/dev/null || true
+    printf '\033]52;c;?\a' >/dev/tty
+    response=""
+    if command -v timeout >/dev/null 2>&1; then
+      response=$(timeout 1 dd bs=1 count=4096 2>/dev/null </dev/tty) || true
+    fi
+    stty "$saved" </dev/tty 2>/dev/null || true
+    content=$(printf '%s' "$response" | sed 's/\033]52;c;//' | sed 's/\033\\$//' | sed 's/\007$//')
+    if [ -n "$content" ] && [ "$content" != "?" ]; then
+      printf '%s' "$content" | base64 -d 2>/dev/null || printf '%s' "$content" | base64 -D 2>/dev/null || true
+    fi
+  fi
+else
+  data=$(cat)
+  encoded=$(printf '%s' "$data" | base64 | tr -d '\n')
+  printf '\033]52;c;%s\a' "$encoded" >/dev/tty
+fi

@@ -6,3 +6,5 @@ vim.opt.colorcolumn = "81"
 vim.opt.wrap = true
 vim.opt.encoding = "utf-8"
 vim.opt.fileencoding = "utf-8"
+vim.g.clipboard = "osc52"
+vim.opt.clipboard = "unnamedplus"

@@ -119,7 +119,7 @@ if [ $# -eq 0 ]; then
   to_dotfilesrc "alias dotfiles='sh \$DOTFILES_PATH/setup.sh'"
 
   # the order here matters!
-  MODULES="base homebrew build-tools shell local fonts flatpak node rustup uv java ssh gpg git terminal-tools tmux nvim ghostty docker"
+  MODULES="base homebrew build-tools shell local fonts flatpak node chrome-devtools rustup uv java ssh gpg git terminal-tools tmux nvim ghostty docker"
   GUI_MODULES="fonts flatpak ghostty alacritty devtoys"
 
   log
