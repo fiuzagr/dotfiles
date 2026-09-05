@@ -1,0 +1,51 @@
+#!/usr/bin/env sh
+set -ae
+
+project="${1:-}"
+config_dir="$HOME/.config/up-stack"
+
+if [ -z "$project" ]; then
+  if [ -d "$config_dir" ]; then
+    for f in "$config_dir"/*.sh; do
+      [ -f "$f" ] && printf '%s\n' "$(basename "$f" .sh)"
+    done
+  fi
+  printf '\nUsage: up-stack <project>\n' >&2
+  exit 0
+fi
+
+config="$config_dir/$project.sh"
+
+if [ ! -f "$config" ]; then
+  printf 'ERROR: config not found: %s\n' "$config" >&2
+  printf 'Run: up-stack-init %s\n' "$project" >&2
+  exit 1
+fi
+
+. "$config"
+
+if [ -z "$TMUX_SERVER" ] || [ -z "$REPOS" ]; then
+  printf 'ERROR: config must define TMUX_SERVER and REPOS\n' >&2
+  exit 1
+fi
+
+if ! type cmd_for >/dev/null 2>&1; then
+  cmd_for() {
+    printf '%s\n' "npm run dev"
+  }
+fi
+
+for repo in $REPOS; do
+  if ! tmux -L "$TMUX_SERVER" has-session -t "$TMUX_SERVER/$repo" 2>/dev/null; then
+    printf 'ERROR: tmux session %s/%s not found. Run: my-tmux %s\n' "$TMUX_SERVER" "$repo" "$project" >&2
+    exit 1
+  fi
+done
+
+for repo in $REPOS; do
+  cmd=$(cmd_for "$repo")
+  tmux -L "$TMUX_SERVER" send-keys -t "$TMUX_SERVER/$repo:Server" "C-c" C-m
+  tmux -L "$TMUX_SERVER" send-keys -t "$TMUX_SERVER/$repo:Server" "$cmd" C-m
+done
+
+printf 'Stack %s started in tmux:Server\n' "$project"

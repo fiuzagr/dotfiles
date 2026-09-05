@@ -1,0 +1,125 @@
+#!/usr/bin/env sh
+set -ae
+
+project="${1:-}"
+config_dir="$HOME/.config/up-stack"
+
+if [ -z "$project" ]; then
+  printf 'Project name: '
+  read -r project
+fi
+
+if [ -z "$project" ]; then
+  printf 'ERROR: project name is required\n' >&2
+  exit 1
+fi
+
+case "$project" in
+  *[!a-zA-Z0-9-]*)
+    printf 'ERROR: project name must be alphanumeric with hyphens\n' >&2
+    exit 1
+    ;;
+esac
+
+config="$config_dir/$project.sh"
+
+if [ -f "$config" ]; then
+  printf 'Config already exists: %s\nOverwrite? [Y/n] ' "$config"
+  read -r answer
+  case "$answer" in
+    [nN]*) exit 0 ;;
+  esac
+fi
+
+printf 'tmux server name [%s]: ' "$project"
+read -r tmux_server
+if [ -z "$tmux_server" ]; then
+  tmux_server="$project"
+fi
+
+repos=""
+custom_cmds=""
+
+printf '\nAdding repos (empty name to finish):\n'
+
+while true; do
+  printf '  Repo name: '
+  read -r repo_name
+  if [ -z "$repo_name" ]; then
+    break
+  fi
+
+  case "$repo_name" in
+    *[!a-zA-Z0-9-]*)
+      printf '  ERROR: repo name must be alphanumeric with hyphens\n' >&2
+      continue
+      ;;
+  esac
+
+  if [ -z "$repos" ]; then
+    repos="$repo_name"
+  else
+    repos="$repos $repo_name"
+  fi
+
+  printf '  Command:\n'
+  printf '    1) npm run dev\n'
+  printf '    2) npm start\n'
+  printf '    3) npm run start:dev\n'
+  printf '    4) Custom\n'
+  printf '  Choice [1]: '
+  read -r cmd_choice
+
+  case "$cmd_choice" in
+    2) cmd="npm start" ;;
+    3) cmd="npm run start:dev" ;;
+    4)
+      printf '  Command: '
+      read -r cmd
+      if [ -z "$cmd" ]; then
+        cmd="npm run dev"
+      fi
+      ;;
+    *) cmd="npm run dev" ;;
+  esac
+
+  if [ "$cmd" != "npm run dev" ]; then
+    if [ -z "$custom_cmds" ]; then
+      custom_cmds="$repo_name|$cmd"
+    else
+      custom_cmds="$custom_cmds
+$repo_name|$cmd"
+    fi
+  fi
+done
+
+if [ -z "$repos" ]; then
+  printf 'ERROR: at least one repo is required\n' >&2
+  exit 1
+fi
+
+mkdir -p "$config_dir"
+
+cat > "$config" <<EOF
+TMUX_SERVER=$tmux_server
+REPOS="$repos"
+
+cmd_for() {
+EOF
+
+if [ -n "$custom_cmds" ]; then
+  printf '  case "$1" in\n' >> "$config"
+  printf '%s\n' "$custom_cmds" | while IFS='|' read -r repo cmd; do
+    [ -z "$repo" ] && continue
+    printf "    %s) printf '%%s\\\\n' \"%s\" ;;\n" \
+      "$repo" "$cmd" >> "$config"
+  done
+  printf "    *) printf '%%s\\\\n' \"npm run dev\" ;;\n" >> "$config"
+  printf '  esac\n' >> "$config"
+else
+  printf "  printf '%%s\\\\n' \"npm run dev\"\n" >> "$config"
+fi
+
+printf '}\n' >> "$config"
+
+printf '\nCreated %s — run: up-stack %s\n' "$config" "$project"
