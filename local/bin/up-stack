@@ -44,6 +44,9 @@ done
 
 for repo in $REPOS; do
   cmd=$(cmd_for "$repo")
+  if [ -z "$cmd" ]; then
+    continue
+  fi
   tmux -L "$TMUX_SERVER" send-keys -t "$TMUX_SERVER/$repo:Server" "C-c" C-m
   tmux -L "$TMUX_SERVER" send-keys -t "$TMUX_SERVER/$repo:Server" "$cmd" C-m
 done

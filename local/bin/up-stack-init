@@ -37,21 +37,39 @@ if [ -z "$tmux_server" ]; then
   tmux_server="$project"
 fi
 
+workspace_dir="$HOME/workspace/$project"
+
+if [ ! -d "$workspace_dir" ]; then
+  printf 'ERROR: workspace directory not found: %s\n' "$workspace_dir" >&2
+  exit 1
+fi
+
+printf '\nScanning %s/...\n\n' "$workspace_dir"
+
 repos=""
 custom_cmds=""
+skipped=""
 
-printf '\nAdding repos (empty name to finish):\n'
+for entry in "$workspace_dir"/*; do
+  [ -d "$entry" ] || continue
 
-while true; do
-  printf '  Repo name: '
-  read -r repo_name
-  if [ -z "$repo_name" ]; then
-    break
-  fi
+  repo_name=$(basename "$entry")
 
   case "$repo_name" in
-    *[!a-zA-Z0-9-]*)
-      printf '  ERROR: repo name must be alphanumeric with hyphens\n' >&2
+    .*) continue ;;
+  esac
+
+  printf '  Found: %s\n' "$repo_name"
+  printf '  Include? [Y/n] '
+  read -r include
+
+  case "$include" in
+    [nN]*)
+      if [ -z "$skipped" ]; then
+        skipped="$repo_name"
+      else
+        skipped="$skipped, $repo_name"
+      fi
       continue
       ;;
   esac
@@ -67,6 +85,7 @@ while true; do
   printf '    2) npm start\n'
   printf '    3) npm run start:dev\n'
   printf '    4) Custom\n'
+  printf '    5) No server\n'
   printf '  Choice [1]: '
   read -r cmd_choice
 
@@ -80,22 +99,36 @@ while true; do
         cmd="npm run dev"
       fi
       ;;
+    5) cmd="" ;;
     *) cmd="npm run dev" ;;
   esac
 
-  if [ "$cmd" != "npm run dev" ]; then
+  if [ "$cmd" != "npm run dev" ] && [ -n "$cmd" ]; then
     if [ -z "$custom_cmds" ]; then
       custom_cmds="$repo_name|$cmd"
     else
       custom_cmds="$custom_cmds
 $repo_name|$cmd"
     fi
+  elif [ -z "$cmd" ]; then
+    if [ -z "$custom_cmds" ]; then
+      custom_cmds="$repo_name|"
+    else
+      custom_cmds="$custom_cmds
+$repo_name|"
+    fi
   fi
+
+  printf '\n'
 done
 
 if [ -z "$repos" ]; then
   printf 'ERROR: at least one repo is required\n' >&2
   exit 1
+fi
+
+if [ -n "$skipped" ]; then
+  printf 'Skipped: %s\n\n' "$skipped"
 fi
 
 mkdir -p "$config_dir"
@@ -111,8 +144,12 @@ if [ -n "$custom_cmds" ]; then
   printf '  case "$1" in\n' >> "$config"
   printf '%s\n' "$custom_cmds" | while IFS='|' read -r repo cmd; do
     [ -z "$repo" ] && continue
-    printf "    %s) printf '%%s\\\\n' \"%s\" ;;\n" \
-      "$repo" "$cmd" >> "$config"
+    if [ -z "$cmd" ]; then
+      printf "    %s) ;;\n" "$repo" >> "$config"
+    else
+      printf "    %s) printf '%%s\\\\n' \"%s\" ;;\n" \
+        "$repo" "$cmd" >> "$config"
+    fi
   done
   printf "    *) printf '%%s\\\\n' \"npm run dev\" ;;\n" >> "$config"
   printf '  esac\n' >> "$config"
@@ -122,4 +159,4 @@ fi
 
 printf '}\n' >> "$config"
 
-printf '\nCreated %s — run: up-stack %s\n' "$config" "$project"
+printf 'Created %s — run: up-stack %s\n' "$config" "$project"

@@ -1,0 +1,50 @@
+#!/usr/bin/env sh
+set -ae
+
+project="${1:-}"
+config_dir="$HOME/.config/up-stack"
+
+if [ -z "$project" ]; then
+  if [ -d "$config_dir" ]; then
+    for f in "$config_dir"/*.sh; do
+      [ -f "$f" ] && printf '%s\n' "$(basename "$f" .sh)"
+    done
+  fi
+  printf '\nUsage: tmux-up <project>\n' >&2
+  exit 0
+fi
+
+config="$config_dir/$project.sh"
+
+if [ ! -f "$config" ]; then
+  printf 'ERROR: config not found: %s\n' "$config" >&2
+  printf 'Run: up-stack-init %s\n' "$project" >&2
+  exit 1
+fi
+
+. "$config"
+
+if [ -z "$TMUX_SERVER" ] || [ -z "$REPOS" ]; then
+  printf 'ERROR: config must define TMUX_SERVER and REPOS\n' >&2
+  exit 1
+fi
+
+for f in "$config_dir"/*.sh; do
+  [ -f "$f" ] || continue
+  (
+    . "$f"
+    [ -z "$TMUX_SERVER" ] || [ -z "$REPOS" ] && exit 1
+    for repo in $REPOS; do
+      tmux-dev "$TMUX_SERVER/$repo" detached
+      sleep 2
+    done
+  )
+done
+
+first_repo="${REPOS%% *}"
+
+if [ -n "$TMUX" ]; then
+  tmux -L "$TMUX_SERVER" switch-client -t "$TMUX_SERVER/$first_repo"
+else
+  tmux -L "$TMUX_SERVER" attach -t "$TMUX_SERVER/$first_repo"
+fi
