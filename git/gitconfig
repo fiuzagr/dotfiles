@@ -22,7 +22,7 @@
   type = !f() { git cat-file -t $1; }; f
   dump = !f() { git cat-file -p $1; }; f
   s = !git status -s
-  l = log --oneline
+  l = log --oneline -15
   ll = log --oneline --graph --decorate --all
   lll = log --stat
   undo = reset --soft HEAD~1
