@@ -2,8 +2,9 @@
 
 set -ae
 
-VALID_TARGETS="nvim kiro-cli opencode"
-GRACEFUL_WAIT_SECS=2
+VALID_TARGETS="nvim kiro-cli opencode node"
+GRACEFUL_WAIT_SECS=5
+POLL_INTERVAL=0.2
 
 usage() {
   cat <<EOF
@@ -15,6 +16,7 @@ Targets:
   nvim        Neovim (SIGTERM, then SIGKILL)
   kiro-cli    Kiro CLI (SIGTERM, then SIGKILL)
   opencode    OpenCode CLI (SIGTERM, then SIGKILL)
+  node        Node (SIGTERM, then SIGKILL)
 
 Default (no args): kill all targets.
 EOF
@@ -51,7 +53,11 @@ get_tree_pids() {
 
 get_target_pids() {
   gtp2_name="$1"
-  gtp2_roots=$(pgrep -x "$gtp2_name" 2>/dev/null || true)
+  if [ "$gtp2_name" = "node" ]; then
+    gtp2_roots=$(pgrep -f '(^|/)node ' 2>/dev/null || true)
+  else
+    gtp2_roots=$(pgrep -x "$gtp2_name" 2>/dev/null || true)
+  fi
   if [ -z "$gtp2_roots" ]; then
     return
   fi
@@ -64,43 +70,6 @@ get_target_pids() {
   printf '%s\n' "$gtp2_all"
 }
 
-kill_graceful() {
-  kg_name="$1"
-  kg_pids=$(get_target_pids "$kg_name")
-  if [ -z "$kg_pids" ]; then
-    return 0
-  fi
-
-  for kg_pid in $kg_pids; do
-    kill -TERM "$kg_pid" 2>/dev/null || true
-  done
-
-  kg_elapsed=0
-  while [ "$kg_elapsed" -lt "$GRACEFUL_WAIT_SECS" ]; do
-    kg_remaining=""
-    for kg_pid in $kg_pids; do
-      if kill -0 "$kg_pid" 2>/dev/null; then
-        kg_remaining="$kg_remaining $kg_pid"
-      else
-      echo "killed $kg_name: $kg_pid (killed)"
-      fi
-    done
-    if [ -z "$kg_remaining" ]; then
-      return 0
-    fi
-    kg_pids="$kg_remaining"
-    sleep 1
-    kg_elapsed=$((kg_elapsed + 1))
-  done
-
-  for kg_pid in $kg_pids; do
-    if kill -0 "$kg_pid" 2>/dev/null; then
-      kill -9 "$kg_pid" 2>/dev/null || true
-      echo "killed $kg_name: $kg_pid"
-    fi
-  done
-}
-
 is_valid_target() {
   for ivt_t in $VALID_TARGETS; do
     if [ "$1" = "$ivt_t" ]; then
@@ -108,6 +77,52 @@ is_valid_target() {
     fi
   done
   return 1
+}
+
+collect_all_pids() {
+  cap_targets="$1"
+  cap_all=""
+  for cap_target in $cap_targets; do
+    cap_pids=$(get_target_pids "$cap_target")
+    if [ -n "$cap_pids" ]; then
+      for cap_pid in $cap_pids; do
+        if ! pid_in_list "$cap_pid" "$cap_all"; then
+          cap_all="$cap_all $cap_pid"
+        fi
+      done
+    fi
+  done
+  printf '%s' "$cap_all"
+}
+
+send_term_all() {
+  sta_pids="$1"
+  for sta_pid in $sta_pids; do
+    kill -TERM "$sta_pid" 2>/dev/null || true
+  done
+}
+
+poll_remaining() {
+  pr_pids="$1"
+  pr_alive=""
+  for pr_pid in $pr_pids; do
+    if kill -0 "$pr_pid" 2>/dev/null; then
+      pr_alive="$pr_alive $pr_pid"
+    else
+      echo "killed: $pr_pid (terminated)"
+    fi
+  done
+  printf '%s' "$pr_alive"
+}
+
+send_kill_all() {
+  ska_pids="$1"
+  for ska_pid in $ska_pids; do
+    if kill -0 "$ska_pid" 2>/dev/null; then
+      kill -9 "$ska_pid" 2>/dev/null || true
+      echo "killed: $ska_pid (SIGKILL)"
+    fi
+  done
 }
 
 main() {
@@ -130,8 +145,25 @@ main() {
     fi
   done
 
-  for md_target in $md_targets; do
-    kill_graceful "$md_target"
+  md_all_pids=$(collect_all_pids "$md_targets")
+  if [ -z "$md_all_pids" ]; then
+    exit 0
+  fi
+
+  send_term_all "$md_all_pids"
+
+  md_elapsed=0
+  md_deadline=$((GRACEFUL_WAIT_SECS * 10))
+  while [ "$md_elapsed" -lt "$md_deadline" ]; do
+    md_alive=$(poll_remaining "$md_all_pids")
+    if [ -z "$md_alive" ]; then
+      exit 0
+    fi
+    md_all_pids="$md_alive"
+    sleep "$POLL_INTERVAL"
+    md_elapsed=$((md_elapsed + 1))
   done
+
+  send_kill_all "$md_all_pids"
 }
 main "$@"
