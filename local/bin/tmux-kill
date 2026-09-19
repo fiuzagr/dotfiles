@@ -1,0 +1,61 @@
+#!/usr/bin/env sh
+set -ae
+
+usage() {
+  cat <<EOF
+Usage: tmux-kill [socket ...]
+
+Kill tmux servers by socket name, or all if no argument is given.
+
+Without arguments, kills every tmux server found under /tmp.
+With named sockets, kills only those via tmux -L.
+
+Examples:
+  tmux-kill                kill all tmux servers
+  tmux-kill myproject      kill named server myproject
+EOF
+}
+
+kill_named() {
+  kn_socket="$1"
+  if tmux -L "$kn_socket" kill-server 2>/dev/null; then
+    echo "killed: $kn_socket"
+  else
+    echo "no server for: $kn_socket" >&2
+  fi
+}
+
+kill_all() {
+  ka_sockets=$(find /tmp/tmux-* -type s 2>/dev/null || true)
+  if [ -z "$ka_sockets" ]; then
+    echo "no tmux servers found"
+    return 0
+  fi
+  printf '%s\n' "$ka_sockets" | while IFS= read -r ka_sock; do
+    if tmux -S "$ka_sock" kill-server 2>/dev/null; then
+      echo "killed: $ka_sock"
+    fi
+  done
+}
+
+main() {
+  if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    usage
+    exit 0
+  fi
+
+  if ! command -v tmux >/dev/null 2>&1; then
+    echo "error: tmux is not installed" >&2
+    exit 1
+  fi
+
+  if [ $# -gt 0 ]; then
+    for mn_socket in "$@"; do
+      kill_named "$mn_socket"
+    done
+  else
+    kill_all
+  fi
+}
+
+main "$@"
