@@ -20,27 +20,25 @@ main() {
     exit 1
   fi
 
+  current="$(git_cmd rev-parse --abbrev-ref HEAD)"
+
   mkdir -p "$(dirname "$LOG_FILE")"
 
   echo "--------------------------------"
-  echo "Overwriting the branch: $branch"
+  echo "Overwriting the branch: $branch with $current"
 
   (
     git_cmd fetch origin
     { git branch -D "$branch" || true; }
-    git_cmd checkout -b "$branch"
-    git_cmd push -f -u origin "$branch"
-    git_cmd checkout -
+    git_cmd branch "$branch" "$current"
+    git_cmd push -f origin "$branch"
   ) || {
     echo "An error occurred while managing branch $branch" >&2
     echo "Check log file: $LOG_FILE" >&2
-    git checkout - >>"$LOG_FILE" 2>&1 || true
     exit 1
   }
 
   echo "Done!"
   echo "--------------------------------"
-
-  return
 }
 main "$@"

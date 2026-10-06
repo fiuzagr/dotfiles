@@ -20,7 +20,14 @@ yes | sdkmanager --licenses >/dev/null 2>&1
 sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 # NDK (só se compilar código nativo):
 sdkmanager --install "ndk;27.0.12077973"
-# emulador + imagem (GUI only):
-if ! is_headless; then
-  sdkmanager --install "emulator" "system-images;android-36;google_apis;arm64-v8a"
-fi
+# Detect CPU architecture for emulator system-image
+cpu_arch=$(uname -m)
+case "$cpu_arch" in
+  arm64|aarch64) abi="arm64-v8a" ;;
+  x86_64|amd64)  abi="x86_64" ;;
+  *) echo "Error: Unsupported architecture: $cpu_arch" >&2; exit 1 ;;
+esac
+log "Android emulator ABI: $abi"
+
+# emulador + imagem:
+sdkmanager --install "emulator" "system-images;android-36;google_apis;$abi"

@@ -34,10 +34,10 @@ main() {
   (
     git_cmd fetch origin
     { git branch -D "$branch" || true; }
-    git_cmd checkout "$branch"
-    git_cmd pull --ff-only
+    git_cmd checkout -b "$branch" "origin/$branch"
+    git_cmd pull --ff-only origin "$branch"
     git_cmd merge "$current" --no-edit
-    git_cmd push -u origin "$branch"
+    git_cmd push origin "$branch"
     git_cmd checkout -
   ) || {
     echo "An error occurred while managing branch $branch" >&2
