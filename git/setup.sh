@@ -92,6 +92,7 @@ fi
 
 mkdir -p "$HOME/.gnupg"
 chmod 700 "$HOME/.gnupg"
+touch "$HOME/.gnupg/gpg-agent.conf"
 
 to_file "$HOME/.gnupg/gpg-agent.conf" \
   "default-cache-ttl" "default-cache-ttl 43200"
