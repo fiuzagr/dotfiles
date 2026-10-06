@@ -63,6 +63,12 @@ if ! gpg --list-secret-keys "$GIT_EMAIL" 2>/dev/null | grep -q "sec"; then
     exit 1
   fi
 
+  if [ -n "$GPG_PASSPHRASE" ]; then
+    _gpg_passphrase_line="Passphrase: $GPG_PASSPHRASE"
+  else
+    _gpg_passphrase_line="%no-protection"
+  fi
+
   log 'Generating Ed25519 GPG key for Git signing...'
   gpg --batch --generate-key <<EOF
 %echo Generating GPG key for Git signing
@@ -75,7 +81,7 @@ Subkey-Usage: sign
 Name-Real: $GIT_NAME
 Name-Email: $GIT_EMAIL
 Expire-Date: 3y
-Passphrase: $GPG_PASSPHRASE
+$_gpg_passphrase_line
 %commit
 %echo done
 EOF
