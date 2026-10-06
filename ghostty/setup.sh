@@ -5,7 +5,11 @@ if is_headless; then
   return 0
 fi
 
-brew_install --cask ghostty
+if is_linux; then
+  install_system_packages ghostty
+elif is_macos; then
+  brew_install --cask ghostty
+fi
 
 mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/ghostty"
 create_symlink "$DOTFILES_PATH/ghostty/config" "${XDG_CONFIG_HOME:-$HOME/.config}/ghostty/config"
